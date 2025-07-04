@@ -13,7 +13,7 @@ def predict_batch(
     mlflow.set_registry_uri("databricks-uc")
     
     table = spark_session.table(input_table_name)
-         
+
        
     from databricks.feature_engineering import FeatureEngineeringClient    
     

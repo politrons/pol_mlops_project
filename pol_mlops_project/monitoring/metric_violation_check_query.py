@@ -3,6 +3,7 @@
 import sys
 import pathlib
 
+
 sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.resolve()))
 
 """The SQL query is divided into three main parts. The first part selects the top {num_evaluation_windows}

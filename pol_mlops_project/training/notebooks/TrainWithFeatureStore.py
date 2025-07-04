@@ -70,6 +70,7 @@ dbutils.widgets.text(
     label="Pickup Features Table",
 )
 
+
 # Dropoff features table name
 dbutils.widgets.text(
     "dropoff_features_table",

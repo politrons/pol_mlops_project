@@ -40,3 +40,4 @@ def test_pickup_features_fn(spark):
     )
     assert isinstance(output_df, pyspark.sql.DataFrame)
     assert output_df.count() == 4  # 4 15-min intervals over 1 hr window.
+

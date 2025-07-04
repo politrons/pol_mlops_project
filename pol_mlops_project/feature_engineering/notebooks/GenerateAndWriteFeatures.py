@@ -1,117 +1,138 @@
 # Databricks notebook source
-"""
-Generate and Write Features Notebook (two‑in‑one)
--------------------------------------------------
-This notebook computes **two** Feature Store tables in a single run:
-    • pol_dev.pol_mlops_project.trip_pickup_features
-    • pol_dev.pol_mlops_project.trip_dropoff_features
+##################################################################################
+# Generate and Write Features Notebook
+#
+# This notebook can be used to generate and write features to a Databricks Feature Store table.
+# It is configured and can be executed as the tasks in the write_feature_table_job workflow defined under
+# ``pol_mlops_project/resources/feature-engineering-workflow-resource.yml``
+#
+# Parameters:
+#
+# * input_table_path (required)   - Path to input data.
+# * output_table_name (required)  - Fully qualified schema + Delta table name for the feature table where the features
+# *                                 will be written to. Note that this will create the Feature table if it does not
+# *                                 exist.
+# * primary_keys (required)       - A comma separated string of primary key columns of the output feature table.
+# *
+# * timestamp_column (optional)   - Timestamp column of the input data. Used to limit processing based on
+# *                                 date ranges. This column is used as the timestamp_key column in the feature table.
+# * input_start_date (optional)   - Used to limit feature computations based on timestamp_column values.
+# * input_end_date (optional)     - Used to limit feature computations based on timestamp_column values.
+# *
+# * features_transform_module (required) - Python module containing the feature transform logic.
+##################################################################################
 
-It is intended to be executed as the task `write_feature_table_job` defined in
-`pol_mlops_project/resources/feature-engineering-workflow-resource.yml`.
 
-Global Parameters (widgets) ─ required for *both* targets
---------------------------------------------------------
-* input_table_path   – Path to the source Delta table.
-* input_start_date   – Optional lower bound for `timestamp_column`.
-* input_end_date     – Optional upper bound for `timestamp_column`.
-* primary_keys       – Comma‑separated primary key columns shared by all targets.
-
-Target‑specific settings are kept in the in‑notebook list `targets` so that you
-can easily add or remove feature tables by editing a single structure.
-"""
-
-# -------------------------------------------
-# 0. Import and define widgets
-# -------------------------------------------
-
+# List of input args needed to run this notebook as a job.
+# Provide them via DB widgets or notebook arguments.
+#
+# A Hive-registered Delta table containing the input data.
 dbutils.widgets.text(
     "input_table_path",
     "/databricks-datasets/nyctaxi-with-zipcodes/subsampled",
     label="Input Table Name",
 )
+# Input start date.
 dbutils.widgets.text("input_start_date", "", label="Input Start Date")
+# Input end date.
 dbutils.widgets.text("input_end_date", "", label="Input End Date")
+# Timestamp column. Will be used to filter input start/end dates.
+# This column is also used as a timestamp key of the feature table.
 dbutils.widgets.text(
-    "primary_keys", "zip", label="Primary key columns, comma‑separated."
+    "timestamp_column", "tpep_pickup_datetime", label="Timestamp column"
 )
 
-# -------------------------------------------
-# 1. Define the targets to generate
-#    • Add a new dict here to create more tables.
-# -------------------------------------------
+# Feature table to store the computed features.
+dbutils.widgets.text(
+    "output_table_name",
+    "pol_dev.pol_mlops_project.trip_pickup_features",
+    label="Output Feature Table Name",
+)
 
-targets = [
-    {
-        "output_table_name": "pol_dev.pol_mlops_project.trip_pickup_features",
-        "timestamp_column": "tpep_pickup_datetime",
-        "features_transform_module": "pickup_features",
-    },
-    {
-        "output_table_name": "pol_dev.pol_mlops_project.trip_dropoff_features",
-        "timestamp_column": "tpep_dropoff_datetime",
-        "features_transform_module": "dropoff_features",
-    },
-]
+# Feature transform module name.
+dbutils.widgets.text(
+    "features_transform_module", "pickup_features", label="Features transform file."
+)
+# Primary Keys columns for the feature table;
+dbutils.widgets.text(
+    "primary_keys",
+    "zip",
+    label="Primary keys columns for the feature table, comma separated.",
+)
 
-# -------------------------------------------
-# 2. Resolve global variables
-# -------------------------------------------
+# COMMAND ----------
 
+import os
+notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
+%cd $notebook_path
+%cd ../features
+
+# COMMAND ----------
+
+# DBTITLE 1,Define input and output variables
 input_table_path = dbutils.widgets.get("input_table_path")
+output_table_name = dbutils.widgets.get("output_table_name")
 input_start_date = dbutils.widgets.get("input_start_date")
 input_end_date = dbutils.widgets.get("input_end_date")
-primary_keys = dbutils.widgets.get("primary_keys")
+ts_column = dbutils.widgets.get("timestamp_column")
+features_module = dbutils.widgets.get("features_transform_module")
+pk_columns = dbutils.widgets.get("primary_keys")
 
-assert input_table_path, "`input_table_path` widget must be provided."
+assert input_table_path != "", "input_table_path notebook parameter must be specified"
+assert output_table_name != "", "output_table_name notebook parameter must be specified"
 
-# -------------------------------------------
-# 3. Read the raw input data once
-# -------------------------------------------
+# Extract database name. Needs to be updated for Unity Catalog to the Schema name.
+output_database = output_table_name.split(".")[1]
 
+# COMMAND ----------
+
+# DBTITLE 1,Create database.
+spark.sql("CREATE DATABASE IF NOT EXISTS " + output_database)
+
+# COMMAND ----------
+
+# DBTITLE 1, Read input data.
 raw_data = spark.read.format("delta").load(input_table_path)
 
-from databricks.feature_engineering import FeatureEngineeringClient
+# COMMAND ----------
+
+# DBTITLE 1,Compute features.
+# Compute the features. This is done by dynamically loading the features module.
 from importlib import import_module
+
+mod = import_module(features_module)
+compute_features_fn = getattr(mod, "compute_features_fn")
+
+features_df = compute_features_fn(
+    input_df=raw_data,
+    timestamp_column=ts_column,
+    start_date=input_start_date,
+    end_date=input_end_date,
+)
+
+# COMMAND ----------
+
+# DBTITLE 1, Write computed features.
+from databricks.feature_engineering import FeatureEngineeringClient
 
 fe = FeatureEngineeringClient()
 
-# -------------------------------------------
-# 4. Loop through each target and create/write its feature table
-# -------------------------------------------
+# Create the feature table if it does not exist first.
+# Note that this is a no-op if a table with the same name and schema already exists.
+fe.create_table(
+    name=output_table_name,    
+    primary_keys=[x.strip() for x in pk_columns.split(",")] + [ts_column],  # Include timeseries column in primary_keys
+    timestamp_keys=[ts_column],
+    df=features_df,
+)
 
-for t in targets:
-    output_table_name = t["output_table_name"]
-    ts_column = t["timestamp_column"]
-    features_module = t["features_transform_module"]
+# Write the computed features dataframe.
+fe.write_table(
+    name=output_table_name,
+    df=features_df,
+    mode="merge",
+)
 
-    print(f"\n▶️  Processing {output_table_name} …")
-
-    # 4.1  Dynamic import of the transformation logic
-    mod = import_module(features_module)
-    compute_features_fn = getattr(mod, "compute_features_fn")
-
-    features_df = compute_features_fn(
-        input_df=raw_data,
-        timestamp_column=ts_column,
-        start_date=input_start_date,
-        end_date=input_end_date,
-    )
-
-    # 4.2  Create the Feature Store table if it does not exist.
-    fe.create_table(
-        name=output_table_name,
-        primary_keys=[c.strip() for c in primary_keys.split(",")] + [ts_column],
-        timestamp_keys=[ts_column],
-        df=features_df,  # schema is inferred
-    )
-
-    # 4.3  Write or merge features into the table.
-    fe.write_table(
-        name=output_table_name,
-        df=features_df,
-        mode="merge",
-    )
-
-print("\n✅ Pickup and drop‑off feature tables successfully generated.")
+# COMMAND ----------
 
 dbutils.notebook.exit(0)

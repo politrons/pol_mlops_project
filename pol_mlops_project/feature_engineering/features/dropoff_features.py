@@ -6,7 +6,6 @@ import pyspark.sql.functions as F
 from pyspark.sql.types import IntegerType, StringType, TimestampType
 from pytz import timezone
 
-
 @F.udf(returnType=IntegerType())
 def _is_weekend(dt):
     tz = "America/New_York"

@@ -16,7 +16,6 @@
 #  * model_name (required) - The name of the model to be used in batch inference.
 ##################################################################################
 
-
 # List of input args needed to run the notebook as a job.
 # Provide them via DB widgets or notebook arguments.
 #

@@ -42,3 +42,4 @@ def test_dropoff_features_fn(spark):
     )
     assert isinstance(output_df, pyspark.sql.DataFrame)
     assert output_df.count() == 1
+

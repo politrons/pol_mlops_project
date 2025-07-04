@@ -98,3 +98,4 @@ resources:
       #    on_failure:
       #      - first@company.com
       #      - second@company.com
+

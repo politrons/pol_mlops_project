@@ -25,3 +25,4 @@ resources:
     experiment:
       name: ${var.experiment_name}
       <<: *permissions
+

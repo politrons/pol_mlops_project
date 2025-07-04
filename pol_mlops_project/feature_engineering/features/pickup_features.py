@@ -6,7 +6,6 @@ import pyspark.sql.functions as F
 from pyspark.sql.types import FloatType, IntegerType, StringType, TimestampType
 from pytz import timezone
 
-
 @F.udf(returnType=StringType())
 def _partition_id(dt):
     # datetime -> "YYYY-MM"

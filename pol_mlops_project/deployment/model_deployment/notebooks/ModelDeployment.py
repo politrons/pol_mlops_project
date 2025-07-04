@@ -50,3 +50,4 @@ deploy(model_uri, env)
 print(
     f"Successfully completed model deployment for {model_uri}"
 )
+
