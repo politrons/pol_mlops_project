@@ -53,27 +53,27 @@ dbutils.widgets.text(
 # MLflow experiment name.
 dbutils.widgets.text(
     "experiment_name",
-    f"/dev-pol_mlops_project-experiment",
+    f"/pol_dev-pol_mlops_project-experiment",
     label="MLflow experiment name",
 )
 
 
 # Unity Catalog registered model name to use for the trained mode.
 dbutils.widgets.text(
-    "model_name", "dev.pol_mlops_project.pol_mlops_project-model", label="Full (Three-Level) Model Name"
+    "model_name", "pol_dev.pol_mlops_project.pol_mlops_project-model", label="Full (Three-Level) Model Name"
 )
 
 # Pickup features table name
 dbutils.widgets.text(
     "pickup_features_table",
-    "dev.pol_mlops_project.trip_pickup_features",
+    "pol_dev.pol_mlops_project.trip_pickup_features",
     label="Pickup Features Table",
 )
 
 # Dropoff features table name
 dbutils.widgets.text(
     "dropoff_features_table",
-    "dev.pol_mlops_project.trip_dropoff_features",
+    "pol_dev.pol_mlops_project.trip_dropoff_features",
     label="Dropoff Features Table",
 )
 
