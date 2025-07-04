@@ -14,7 +14,12 @@ variables:
     default: pol_mlops_project-model
   catalog_name:
     description: The catalog name to save the trained model
-    
+  # Define the clusterId you want to be used for Jobs/Pipelines
+  inference_cluster_id:
+    description: ID of the shared inference cluster
+    default: ""          # leave empty here, set per-target
+
+
 include:
   # Resources folder contains ML artifact resources for the ML project that defines model and experiment
   # And workflows resources for the ML project including model training -> validation -> deployment,
@@ -33,24 +38,28 @@ targets:
     default: true
     variables:
       catalog_name: pol_dev
+      inference_cluster_id: 0703-160024-hjfdwxx8
     workspace:
       host: https://dbc-fc1f7848-94c3.cloud.databricks.com
 
   staging:
     variables:
       catalog_name: pol_staging
+      inference_cluster_id: 0703-160024-hjfdwxx8
     workspace:
       host: https://dbc-fc1f7848-94c3.cloud.databricks.com
 
   prod:
     variables:
       catalog_name: pol_prod
+      inference_cluster_id: 0703-160024-hjfdwxx8
     workspace:
       host: https://dbc-fc1f7848-94c3.cloud.databricks.com
 
   test:
     variables:
       catalog_name: pol_test
+      inference_cluster_id: 0703-160024-hjfdwxx8
     workspace:
       host: https://dbc-fc1f7848-94c3.cloud.databricks.com
 

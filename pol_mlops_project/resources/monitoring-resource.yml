@@ -2,15 +2,6 @@
 # The regression monitor defined here works OOB with this example regression notebook: https://docs.databricks.com/_extras/notebooks/source/monitoring/regression-monitor.html
 # NOTE: Monitoring only works on Unity Catalog tables.
 
-new_cluster: &new_cluster
-  new_cluster:
-    num_workers: 3
-    spark_version: 15.3.x-cpu-ml-scala2.12
-    node_type_id: i3.xlarge
-    data_security_mode: "SINGLE_USER"
-    custom_tags:
-      clusterSource: mlops-stacks_0.4
-
 common_permissions: &permissions
   permissions:
     - level: CAN_VIEW
@@ -39,7 +30,7 @@ resources:
       name: ${bundle.target}-pol_mlops_project-monitoring-retraining-job
       tasks:
         - task_key: monitored_metric_violation_check
-          <<: *new_cluster
+          existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
             notebook_path: ../monitoring/notebooks/MonitoredMetricViolationCheck.py
             base_parameters:
