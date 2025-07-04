@@ -28,7 +28,7 @@ include:
 
 # Deployment Target specific values for workspace
 targets:
-  pol_dev:  # UC Catalog Name
+  dev:  # UC Catalog Name
     mode: development
     default: true
     variables:
@@ -36,19 +36,19 @@ targets:
     workspace:
       host: https://dbc-fc1f7848-94c3.cloud.databricks.com
 
-  pol_staging:
+  staging:
     variables:
       catalog_name: pol_staging
     workspace:
       host: https://dbc-fc1f7848-94c3.cloud.databricks.com
 
-  pol_prod:
+  prod:
     variables:
       catalog_name: pol_prod
     workspace:
       host: https://dbc-fc1f7848-94c3.cloud.databricks.com
 
-  pol_test:
+  test:
     variables:
       catalog_name: pol_test
     workspace:
