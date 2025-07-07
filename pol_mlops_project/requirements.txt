@@ -1,3 +1,4 @@
+# ─── Core dependencies you already have ───────────────────────────────────────
 mlflow==2.11.3
 numpy>=1.23.0
 pandas==1.5.3
@@ -8,4 +9,14 @@ Jinja2==3.0.3
 pyspark~=3.3.0
 pytz~=2022.2.1
 pytest>=7.1.2
+
+# ─── Hyper-parameter optimisation stack ───────────────────────────────────────
+# Core Optuna library (3.6 matches your MLflow & Python 3.10 runtimes on DBR 13+)
+optuna==3.6.0
+
+# “optuna-integration” now hosts all helper callbacks (MLflow, LightGBM, etc.)
+optuna-integration==3.6.0              # ← required for MLflowCallback
+
+# LightGBM itself (>=4.2 works with Optuna ≥3.5; 4.3.0 is latest as of Jul-2025)
+lightgbm==4.3.0
 
