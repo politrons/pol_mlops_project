@@ -1,9 +1,17 @@
 # Databricks notebook source
-################################################################################
-# Model-Training Notebook (Feature Store + Optuna hyper-parameter tuning)
-# “Ultra-minimal” version: no MLflow callback, nested run per trial, and the
-# LightGBM base-params list contains only what’s strictly required.
-################################################################################
+##################################################################################
+# Medallion Architecture + Model-Training Notebook
+#
+# 1. Bronze : raw → Delta
+# 2. Silver : cleaning and transformations
+# 3. Gold   : feature engineering → Feature Store + LightGBM training
+#
+# Widget parameters:
+#   * catalog
+#   * schema
+#   * experiment_name
+#   * model_name
+##################################################################################
 
 # COMMAND ----------
 # MAGIC %load_ext autoreload
@@ -29,123 +37,187 @@ notebook_path = "/Workspace/" + os.path.dirname(
 dbutils.library.restartPython()
 
 # COMMAND ----------
-# Notebook parameters
+# Widgets
 dbutils.widgets.dropdown("env", "staging", ["staging", "prod"], "Environment")
 env = dbutils.widgets.get("env")
-
-dbutils.widgets.text("training_data_path",
-                     "/databricks-datasets/nyctaxi-with-zipcodes/subsampled",
-                     label="Training data path")
-dbutils.widgets.text("experiment_name",
-                     "/pol_dev-pol_mlops_project-experiment",
-                     label="MLflow experiment")
-dbutils.widgets.text("model_name",
-                     "pol_dev.pol_mlops_project.pol_mlops_project-model",
-                     label="Model name (catalog.schema.name)")
-dbutils.widgets.text("pickup_features_table",
-                     "pol_dev.pol_mlops_project.trip_pickup_features",
-                     label="Pickup features table")
-dbutils.widgets.text("dropoff_features_table",
-                     "pol_dev.pol_mlops_project.trip_dropoff_features",
-                     label="Drop-off features table")
+dbutils.widgets.text("catalog", "pol_dev", "Catalog")
+dbutils.widgets.text("schema", "pol_mlops_project", "Schema")
+dbutils.widgets.text("experiment_name", "/pol_dev-pol_mlops_project-experiment",  "MLflow Experiment")
+dbutils.widgets.text(
+    "model_name", "pol_dev.pol_mlops_project.pol_mlops_project-model", label="Full (Three-Level) Model Name"
+)
 
 # COMMAND ----------
-# Retrieve widget values
-input_table_path        = dbutils.widgets.get("training_data_path")
-experiment_name         = dbutils.widgets.get("experiment_name")
-model_name              = dbutils.widgets.get("model_name")
-pickup_features_table   = dbutils.widgets.get("pickup_features_table")
-dropoff_features_table  = dbutils.widgets.get("dropoff_features_table")
-
-# COMMAND ----------
-# Initialise MLflow
+from pyspark.sql import functions as F
+from pyspark.sql.functions import col, avg
+from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
+from mlflow.tracking import MlflowClient
+import mlflow.lightgbm
 import mlflow
+import lightgbm as lgb
+from sklearn.model_selection import train_test_split
+
+catalog = dbutils.widgets.get("catalog")
+schema = dbutils.widgets.get("schema")
+experiment_name = dbutils.widgets.get("experiment_name")
+model_name = dbutils.widgets.get("model_name")
+
 mlflow.set_experiment(experiment_name)
 mlflow.set_registry_uri("databricks-uc")
 
-# COMMAND ----------
-# Load raw data
-raw_data = spark.read.format("delta").load(input_table_path)
+# -----------------
+# Bronze layer
+# -----------------
+bronze_table = f"{catalog}.{schema}.bronze_nyc_taxi"
+raw_df = (
+    spark.read.format("delta")
+    .load("/databricks-datasets/nyctaxi-with-zipcodes/subsampled")
+)
+raw_df.write.mode("overwrite").format("delta").saveAsTable(bronze_table)
+
+# -----------------
+# Silver layer
+# -----------------
+silver_table = f"{catalog}.{schema}.silver_nyc_taxi"
+silver_df = (
+    raw_df
+    .filter(col("trip_distance") > 0)
+    .filter(col("fare_amount") > 0)
+    .select("fare_amount", "pickup_zip", "dropoff_zip",
+            "tpep_pickup_datetime", "tpep_dropoff_datetime")
+)
+silver_df.write.mode("overwrite").format("delta").saveAsTable(silver_table)
+
+# ----------------------------
+# Gold layer – feature tables
+# ----------------------------
+from databricks.feature_engineering import FeatureEngineeringClient
+
+pickup_features_table = f"{catalog}.{schema}.trip_pickup_features"
+dropoff_features_table = f"{catalog}.{schema}.trip_dropoff_features"
+
+featureEngineering = FeatureEngineeringClient()
+
+# ---- PICKUP FEATURES ----------------------------------------------------------
+pickup_features = (
+    silver_df
+    .groupBy("pickup_zip")
+    .agg(avg("fare_amount")
+         .alias("avg_fare_per_zip"))
+    .withColumnRenamed("pickup_zip", "zip")  # primary key column
+)
+
+# Drop any old table (removes stale schema & constraints)
+spark.sql(f"DROP TABLE IF EXISTS {pickup_features_table}")
+
+# Re-create as a feature table with PK = zip
+featureEngineering.create_table(
+    name=pickup_features_table,
+    primary_keys=["zip"],
+    df=pickup_features,
+)
+# Overwrite with latest data
+featureEngineering.write_table(
+    name=pickup_features_table,
+    df=pickup_features,
+    mode="merge",
+)
+
+# ---- DROPOFF FEATURES ---------------------------------------------------------
+dropoff_features = (
+    silver_df
+    .groupBy("dropoff_zip")
+    .count()
+    .withColumnRenamed("count", "trip_count")  # keep original PK = dropoff_zip
+)
+
+spark.sql(f"DROP TABLE IF EXISTS {dropoff_features_table}")
+
+featureEngineering.create_table(
+    name=dropoff_features_table,
+    primary_keys=["dropoff_zip"],
+    df=dropoff_features,
+)
+
+featureEngineering.write_table(
+    name=dropoff_features_table,
+    df=dropoff_features,
+    mode="merge",
+)
 
 # COMMAND ----------
-# Helper functions
+# -----------------
+# Build the training set
+# -----------------
 from datetime import timedelta, timezone
 import math
-import pyspark.sql.functions as F
 from pyspark.sql.types import IntegerType
-from mlflow.tracking import MlflowClient
 
-def rounded_unix_timestamp(dt, minutes=15):
-    nsecs = dt.minute * 60 + dt.second + dt.microsecond * 1e-6
-    delta = math.ceil(nsecs / (60 * minutes)) * (60 * minutes) - nsecs
+
+def rounded_unix_timestamp(dt, num_minutes=15):
+    """Ceil dt to the next *num_minutes* bucket and return seconds since epoch."""
+    secs = dt.minute * 60 + dt.second + dt.microsecond * 1e-6
+    delta = math.ceil(secs / (60 * num_minutes)) * (60 * num_minutes) - secs
     return int((dt + timedelta(seconds=delta)).replace(tzinfo=timezone.utc).timestamp())
+
+
+def get_latest_model_version(model_name):
+    latest_version = 1
+    mlflow_client = MlflowClient()
+    for mv in mlflow_client.search_model_versions(f"name='{model_name}'"):
+        version_int = int(mv.version)
+        if version_int > latest_version:
+            latest_version = version_int
+    return latest_version
+
 
 rounded_unix_timestamp_udf = F.udf(rounded_unix_timestamp, IntegerType())
 
-def rounded_taxi_data(df):
-    return (
-        df.withColumn(
-            "rounded_pickup_datetime",
-            F.to_timestamp(rounded_unix_timestamp_udf(df["tpep_pickup_datetime"], F.lit(15))),
-        )
-        .withColumn(
-            "rounded_dropoff_datetime",
-            F.to_timestamp(rounded_unix_timestamp_udf(df["tpep_dropoff_datetime"], F.lit(30))),
-        )
-        .drop("tpep_pickup_datetime")
-        .drop("tpep_dropoff_datetime")
+rounded_df = (
+    silver_df
+    .withColumn(
+        "rounded_pickup_datetime",
+        F.to_timestamp(rounded_unix_timestamp_udf(col("tpep_pickup_datetime"), F.lit(15)))
     )
-
-def get_latest_model_version(name: str) -> int:
-    latest = 1
-    client = MlflowClient()
-    for mv in client.search_model_versions(f"name='{name}'"):
-        latest = max(latest, int(mv.version))
-    return latest
-
-# COMMAND ----------
-taxi_data = rounded_taxi_data(raw_data)
+    .withColumn(
+        "rounded_dropoff_datetime",
+        F.to_timestamp(rounded_unix_timestamp_udf(col("tpep_dropoff_datetime"), F.lit(30)))
+    )
+    .drop("tpep_pickup_datetime", "tpep_dropoff_datetime")
+    .withColumn("zip", col("pickup_zip"))  # helper key for feature lookup
+)
 
 # COMMAND ----------
-# Feature look-ups
-from databricks.feature_engineering import FeatureLookup
+# -----------------
+# Feature lookups
+# -----------------
+pickup_lookup = FeatureLookup(
+    table_name=pickup_features_table,
+    feature_names=["avg_fare_per_zip"],
+    lookup_key=["zip"],
+)
 
-pickup_feature_lookups = [
-    FeatureLookup(
-        table_name=pickup_features_table,
-        feature_names=[
-            "mean_fare_window_1h_pickup_zip",
-            "count_trips_window_1h_pickup_zip",
-        ],
-        lookup_key=["pickup_zip"],
-        timestamp_lookup_key=["rounded_pickup_datetime"],
-    ),
-]
-dropoff_feature_lookups = [
-    FeatureLookup(
-        table_name=dropoff_features_table,
-        feature_names=[
-            "count_trips_window_30m_dropoff_zip",
-            "dropoff_is_weekend",
-        ],
-        lookup_key=["dropoff_zip"],
-        timestamp_lookup_key=["rounded_dropoff_datetime"],
-    ),
-]
+dropoff_lookup = FeatureLookup(
+    table_name=dropoff_features_table,
+    feature_names=["trip_count"],
+    lookup_key=["dropoff_zip"],
+)
 
 # COMMAND ----------
-# Build TrainingSet
-from databricks.feature_engineering import FeatureEngineeringClient
-
+# -----------------
+# Train the model
+# -----------------
+featureEngineering = FeatureEngineeringClient()
 mlflow.end_run()
-mlflow.start_run(run_name="optuna_lightgbm_training")
+mlflow.start_run()
 
-fe = FeatureEngineeringClient()
-training_set = fe.create_training_set(
-    df=taxi_data,
-    feature_lookups=pickup_feature_lookups + dropoff_feature_lookups,
+training_set = featureEngineering.create_training_set(
+    df=rounded_df,
+    feature_lookups=[pickup_lookup, dropoff_lookup],
     label="fare_amount",
-    exclude_columns=["rounded_pickup_datetime", "rounded_dropoff_datetime"],
+    exclude_columns=[
+        "rounded_pickup_datetime", "rounded_dropoff_datetime", "zip"
+    ],
 )
 training_df = training_set.load_df()
 
@@ -217,7 +289,7 @@ best_model = lgb.train(
 
 # COMMAND ----------
 # Register model
-fe.log_model(
+featureEngineering.log_model(
     model=best_model,
     artifact_path="model_packaged",
     flavor=mlflow.lightgbm,
