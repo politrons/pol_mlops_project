@@ -29,6 +29,7 @@ include:
   - ./resources/ml-artifacts-resource.yml
   - ./resources/training-model-workflow-resource.yml
   - ./resources/training-model-optune-workflow-resource.yml
+  - ./resources/medallion-training-model-workflow-resource.yml
   - ./resources/feature-engineering-workflow-resource.yml
   # TODO: uncomment once monitoring inference table has been created
   # - ./resources/monitoring-resource.yml
