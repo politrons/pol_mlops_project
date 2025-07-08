@@ -158,6 +158,7 @@ from sklearn.model_selection import train_test_split
 
 pdf = training_df.toPandas()[training_df.columns]
 train_df, valid_df = train_test_split(pdf, random_state=123, test_size=0.2)
+# Return data without label=fare_amount and also the label to be used later for validation
 X_train, y_train = train_df.drop("fare_amount", axis=1), train_df["fare_amount"]
 X_valid, y_valid = valid_df.drop("fare_amount", axis=1), valid_df["fare_amount"]
 
@@ -173,6 +174,7 @@ BASE_PARAMS = {
 
 def lgbm_objective(trial):
     params = BASE_PARAMS | {
+        # To add hyperparameters to be tuned to get the best performance
         "num_leaves"       : trial.suggest_int("num_leaves", 16, 128, step=8),
         "learning_rate"    : trial.suggest_float("learning_rate", 1e-3, 0.3, log=True),
         "min_child_samples": trial.suggest_int("min_child_samples", 5, 100),
@@ -206,7 +208,7 @@ mlflow.start_run(run_name="best_lgbm_model")
 mlflow.lightgbm.autolog()
 
 best_params = BASE_PARAMS | study.best_params
-best_gbm = lgb.train(
+best_model = lgb.train(
     best_params,
     train_set=lgb_train,
     num_boost_round=5000,
@@ -216,7 +218,7 @@ best_gbm = lgb.train(
 # COMMAND ----------
 # Register model
 fe.log_model(
-    model=best_gbm,
+    model=best_model,
     artifact_path="model_packaged",
     flavor=mlflow.lightgbm,
     training_set=training_set,
