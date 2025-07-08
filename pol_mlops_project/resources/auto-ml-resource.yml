@@ -1,0 +1,17 @@
+#Job to use AutoML API from the notebook to run the experiment to pick up the best notebook model for the data.
+resources:
+  jobs:
+    auto_ml_job:
+      name: ${bundle.target}-pol_mlops_project-automl-job
+      tasks:
+        - task_key: AutoMLTrain
+          existing_cluster_id: ${var.inference_cluster_id}
+          notebook_task:
+            notebook_path: ../auto_ml/notebooks/AutoMLClassifier.py
+      schedule:
+        quartz_cron_expression: "0 0 9 * * ?"   # daily 9 AM
+        timezone_id: UTC
+      permissions:
+        - level: CAN_VIEW
+          group_name: users
+

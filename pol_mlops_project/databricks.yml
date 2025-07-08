@@ -24,6 +24,7 @@ include:
   # Resources folder contains ML artifact resources for the ML project that defines model and experiment
   # And workflows resources for the ML project including model training -> validation -> deployment,
   # feature engineering,  batch inference, quality monitoring, metric refresh, alerts and triggering retraining
+  - ./resources/auto-ml-resource.yml
   - ./resources/batch-inference-workflow-resource.yml
   - ./resources/ml-artifacts-resource.yml
   - ./resources/training-model-workflow-resource.yml
