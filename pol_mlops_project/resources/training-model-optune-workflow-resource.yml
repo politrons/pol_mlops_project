@@ -10,7 +10,7 @@ resources:
     model_training_optune_job:
       name: ${bundle.target}-pol_mlops_project-model-training-optune-job
       tasks:
-        - task_key: TrainOptune
+        - task_key: Train
           existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
             notebook_path: ../training/notebooks/TrainWithOptuna.py
@@ -27,7 +27,7 @@ resources:
         - task_key: ModelValidation
           existing_cluster_id: ${var.inference_cluster_id}
           depends_on:
-            - task_key: TrainOptune
+            - task_key: Train
           notebook_task:
             notebook_path: ../validation/notebooks/ModelValidation.py
             base_parameters:
