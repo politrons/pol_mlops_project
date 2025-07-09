@@ -30,7 +30,7 @@ include:
   - ./resources/ml-artifacts-resource.yml
   - ./resources/training-model-workflow-resource.yml
   - ./resources/training-model-optune-workflow-resource.yml
-  - ./resources/medallion-training-model-workflow-resource.yml
+  - ./resources/training-model-medallion-workflow-resource.yml
   - ./resources/feature-engineering-workflow-resource.yml
   # TODO: uncomment once monitoring inference table has been created
   # - ./resources/monitoring-resource.yml
@@ -42,28 +42,28 @@ targets:
     default: true
     variables:
       catalog_name: pol_dev
-      inference_cluster_id: 0703-160024-hjfdwxx8
+      inference_cluster_id: 0709-133136-30lgshbm
     workspace:
       host: https://dbc-fc1f7848-94c3.cloud.databricks.com
 
   staging:
     variables:
       catalog_name: pol_staging
-      inference_cluster_id: 0703-160024-hjfdwxx8
+      inference_cluster_id: 0709-133136-30lgshbm
     workspace:
       host: https://dbc-fc1f7848-94c3.cloud.databricks.com
 
   prod:
     variables:
       catalog_name: pol_prod
-      inference_cluster_id: 0703-160024-hjfdwxx8
+      inference_cluster_id: 0709-133136-30lgshbm
     workspace:
       host: https://dbc-fc1f7848-94c3.cloud.databricks.com
 
   test:
     variables:
       catalog_name: pol_test
-      inference_cluster_id: 0703-160024-hjfdwxx8
+      inference_cluster_id: 0709-133136-30lgshbm
     workspace:
       host: https://dbc-fc1f7848-94c3.cloud.databricks.com
 

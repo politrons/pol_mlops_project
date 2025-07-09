@@ -1,8 +1,3 @@
-common_permissions: &permissions
-  permissions:
-    - level: CAN_VIEW
-      group_name: users
-
 resources:
   # ---------- DLT pipeline (Medallion) ----------
   pipelines:
@@ -19,4 +14,3 @@ resources:
         - label: default
           num_workers: 1
           node_type_id: i3.xlarge
-  <<: *permissions

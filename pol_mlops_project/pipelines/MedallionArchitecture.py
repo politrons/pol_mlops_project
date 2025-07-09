@@ -1,3 +1,6 @@
+# Delta Live Tables is Databricks’ fully managed, declarative pipeline engine that turns simple SQL or Python definitions
+# into continuously updated, ACID-compliant Delta tables—automatically handling orchestration, scaling, data-quality enforcement,
+# lineage tracking, and fault recovery, so you can focus purely on business logic instead of pipeline plumbing.
 import dlt
 from pyspark.sql import functions as F
 from pyspark.sql.functions import col, avg
@@ -74,3 +77,8 @@ def gold():
               .select("fare_amount", "pickup_zip", "dropoff_zip",
                       "avg_fare_per_zip", "trip_count")
     )
+
+
+
+
+
