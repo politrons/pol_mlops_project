@@ -12,7 +12,7 @@ resources:
         - task_key: Train
           existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
-            notebook_path: ../training/notebooks/TrainMedallionPipeline.py
+            notebook_path: ../training/notebooks/TrainMedallionArchitecture.py
             base_parameters:
               env: ${bundle.target}
               # TODO: Update training_data_path

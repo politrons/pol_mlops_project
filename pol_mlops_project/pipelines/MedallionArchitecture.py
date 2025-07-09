@@ -1,0 +1,76 @@
+import dlt
+from pyspark.sql import functions as F
+from pyspark.sql.functions import col, avg
+
+# ------------------------------------------------------------------
+# Bronze
+# ------------------------------------------------------------------
+@dlt.table(name="bronze_nyc_taxi",
+           comment="Raw NYC taxi demo subset",
+           table_properties={"quality": "bronze"})
+def bronze():
+    return (
+        spark.read.format("delta")
+             .load("/databricks-datasets/nyctaxi-with-zipcodes/subsampled")
+             .withColumn("ingest_ts", F.current_timestamp())
+    )
+
+# ------------------------------------------------------------------
+# Silver
+# ------------------------------------------------------------------
+@dlt.table(name="silver_nyc_taxi",
+           comment="Cleaned trips (positive fare)",
+           table_properties={"quality": "silver"})
+def silver():
+    df = dlt.read("bronze_nyc_taxi")
+    if "trip_distance" in df.columns:
+        df = df.filter(col("trip_distance") > 0)
+    return (
+        df.filter(col("fare_amount") > 0)
+          .select("fare_amount", "pickup_zip", "dropoff_zip")
+    )
+
+# ------------------------------------------------------------------
+# Pickup feature
+# ------------------------------------------------------------------
+@dlt.table(name="trip_pickup_features",
+           comment="Average fare per pickup ZIP",
+           table_properties={"quality": "gold"})
+def trip_pickup_features():
+    return (
+        dlt.read("silver_nyc_taxi")
+            .groupBy("pickup_zip")
+            .agg(avg("fare_amount").alias("avg_fare_per_zip"))
+            .withColumnRenamed("pickup_zip", "zip")    # PK = zip
+    )
+
+# ------------------------------------------------------------------
+# Drop-off feature
+# ------------------------------------------------------------------
+@dlt.table(name="trip_dropoff_features",
+           comment="Trip count per drop-off ZIP",
+           table_properties={"quality": "gold"})
+def trip_dropoff_features():
+    return (
+        dlt.read("silver_nyc_taxi")
+            .groupBy("dropoff_zip")
+            .count()
+            .withColumnRenamed("count", "trip_count")
+    )
+
+# ------------------------------------------------------------------
+# Gold table – model-ready
+# ------------------------------------------------------------------
+@dlt.table(name="gold_nyc_taxi",
+           comment="Denormalised training set",
+           table_properties={"quality": "gold"})
+def gold():
+    silver  = dlt.read("silver_nyc_taxi")
+    pickup  = dlt.read("trip_pickup_features").withColumnRenamed("zip", "pickup_zip")
+    dropoff = dlt.read("trip_dropoff_features")
+    return (
+        silver.join(pickup,  "pickup_zip",  "left")
+              .join(dropoff, "dropoff_zip", "left")
+              .select("fare_amount", "pickup_zip", "dropoff_zip",
+                      "avg_fare_per_zip", "trip_count")
+    )

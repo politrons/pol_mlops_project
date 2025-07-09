@@ -1,0 +1,22 @@
+common_permissions: &permissions
+  permissions:
+    - level: CAN_VIEW
+      group_name: users
+
+resources:
+  # ---------- DLT pipeline (Medallion) ----------
+  pipelines:
+    nyc_taxi_medallion:
+      name: nyc_taxi_medallion
+      catalog: pol_dev
+      target: pol_mlops_project
+      continuous: false
+      edition: ADVANCED
+      libraries:
+        - file:
+            path: ../pipelines/MedallionArchitecture.py
+      clusters:
+        - label: default
+          num_workers: 1
+          node_type_id: i3.xlarge
+  <<: *permissions
