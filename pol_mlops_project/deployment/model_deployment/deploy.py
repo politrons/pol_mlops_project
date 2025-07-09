@@ -35,7 +35,6 @@ def deploy(model_uri, env):
                 alias="challenger")
 
 
-
 if __name__ == "__main__":
     deploy(model_uri=sys.argv[1], env=sys.argv[2])
 
