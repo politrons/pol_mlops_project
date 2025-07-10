@@ -13,7 +13,7 @@ from pyspark.sql.functions import col, avg
            table_properties={"quality": "bronze"})
 def bronze():
     return (
-        spark.read.format("delta")
+        spark.readStream.format("delta")
              .load("/databricks-datasets/nyctaxi-with-zipcodes/subsampled")
              .withColumn("ingest_ts", F.current_timestamp())
     )
@@ -25,7 +25,7 @@ def bronze():
            comment="Cleaned trips (positive fare)",
            table_properties={"quality": "silver"})
 def silver():
-    df = dlt.read("bronze_nyc_taxi")
+    df = dlt.readStream("bronze_nyc_taxi")
     if "trip_distance" in df.columns:
         df = df.filter(col("trip_distance") > 0)
     return (
@@ -41,7 +41,7 @@ def silver():
            table_properties={"quality": "gold"})
 def trip_pickup_features():
     return (
-        dlt.read("silver_nyc_taxi")
+        dlt.readStream("silver_nyc_taxi")
             .groupBy("pickup_zip")
             .agg(avg("fare_amount").alias("avg_fare_per_zip"))
             .withColumnRenamed("pickup_zip", "zip")    # PK = zip
@@ -55,7 +55,7 @@ def trip_pickup_features():
            table_properties={"quality": "gold"})
 def trip_dropoff_features():
     return (
-        dlt.read("silver_nyc_taxi")
+        dlt.readStream("silver_nyc_taxi")
             .groupBy("dropoff_zip")
             .count()
             .withColumnRenamed("count", "trip_count")
@@ -68,7 +68,7 @@ def trip_dropoff_features():
            comment="Denormalised training set",
            table_properties={"quality": "gold"})
 def gold():
-    silver  = dlt.read("silver_nyc_taxi")
+    silver  = dlt.readStream("silver_nyc_taxi")
     pickup  = dlt.read("trip_pickup_features").withColumnRenamed("zip", "pickup_zip")
     dropoff = dlt.read("trip_dropoff_features")
     return (
