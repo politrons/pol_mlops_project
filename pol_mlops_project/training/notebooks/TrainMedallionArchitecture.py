@@ -69,7 +69,7 @@ pdf = gold_df.toPandas()
 # ------------------------------------------------------------------------------
 # Train / test split
 # ------------------------------------------------------------------------------
-train, test = train_test_split(pdf, random_state=42)
+train, test = train_test_split(pdf, random_state=42, test_size=0.2)
 X_train, y_train = train.drop("fare_amount", axis=1), train["fare_amount"]
 X_test,  y_test  = test.drop("fare_amount",  axis=1), test["fare_amount"]
 
