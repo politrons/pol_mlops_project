@@ -28,7 +28,7 @@ include:
   - ./resources/auto-ml-resource.yml
   - ./resources/batch-inference-workflow-resource.yml
   - ./resources/ml-artifacts-resource.yml
-  - ./resources/training-model-workflow-resource.yml
+  - ./resources/training-model-fe-workflow-resource.yml
   - ./resources/training-model-optune-workflow-resource.yml
   - ./resources/training-model-medallion-workflow-resource.yml
   - ./resources/feature-engineering-workflow-resource.yml

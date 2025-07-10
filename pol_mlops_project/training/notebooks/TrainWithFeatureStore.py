@@ -4,7 +4,7 @@
 #
 # This notebook shows an example of a Model Training pipeline using Databricks Feature Store tables.
 # It is configured and can be executed as the "Train" task in the model_training_job workflow defined under
-# ``pol_mlops_project/resources/training-model-workflow-resource.yml``
+# ``pol_mlops_project/resources/training-model-fe-workflow-resource.yml``
 #
 # Parameters:
 # * env (required):                 - Environment the notebook is run in (staging, or prod). Defaults to "staging".
@@ -66,7 +66,7 @@ dbutils.widgets.text(
 # Pickup features table name
 dbutils.widgets.text(
     "pickup_features_table",
-    "pol_dev.pol_mlops_project.trip_pickup_features",
+    "pol_dev.pol_mlops_project.fe_trip_pickup_features",
     label="Pickup Features Table",
 )
 
@@ -74,7 +74,7 @@ dbutils.widgets.text(
 # Dropoff features table name
 dbutils.widgets.text(
     "dropoff_features_table",
-    "pol_dev.pol_mlops_project.trip_dropoff_features",
+    "pol_dev.pol_mlops_project.fe_trip_dropoff_features",
     label="Dropoff Features Table",
 )
 

@@ -5,7 +5,7 @@
 # This notebook uses mlflow model validation API to run mode validation after training and registering a model
 # in model registry, before deploying it to the "champion" alias.
 #
-# It runs as part of CD and by an automated model training job -> validation -> deployment job defined under ``pol_mlops_project/resources/training-model-workflow-resource.yml``
+# It runs as part of CD and by an automated model training job -> validation -> deployment job defined under ``pol_mlops_project/resources/training-model-fe-workflow-resource.yml``
 #
 #
 # Parameters:
