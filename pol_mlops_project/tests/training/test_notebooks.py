@@ -5,4 +5,5 @@ def test_notebook_format():
     paths = list(pathlib.Path("./notebooks").glob("**/*.py"))
     for f in paths:
         notebook_str = open(str(f)).read()
+        print(notebook_str)
         assert notebook_str.startswith("# Databricks notebook source")
