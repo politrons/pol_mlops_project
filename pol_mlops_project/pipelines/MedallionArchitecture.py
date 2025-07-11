@@ -5,6 +5,7 @@ import dlt
 from pyspark.sql import functions as F
 from pyspark.sql.functions import col, avg
 
+
 # ------------------------------------------------------------------
 # Bronze
 # ------------------------------------------------------------------
@@ -14,9 +15,10 @@ from pyspark.sql.functions import col, avg
 def bronze():
     return (
         spark.readStream.format("delta")
-             .load("/databricks-datasets/nyctaxi-with-zipcodes/subsampled")
-             .withColumn("ingest_ts", F.current_timestamp())
+        .load("/databricks-datasets/nyctaxi-with-zipcodes/subsampled")
+        .withColumn("ingest_ts", F.current_timestamp())
     )
+
 
 # ------------------------------------------------------------------
 # Silver
@@ -30,44 +32,37 @@ def silver():
         df = df.filter(col("trip_distance") > 0)
     return (
         df.filter(col("fare_amount") > 0)
-          .select("fare_amount", "pickup_zip", "dropoff_zip")
+        .select("fare_amount", "pickup_zip", "dropoff_zip")
     )
+
 
 # ------------------------------------------------------------------
 # Pickup feature
 # ------------------------------------------------------------------
+def compute_trip_pickup_features(df):
+    return (
+        df
+        .groupBy("pickup_zip")
+        .agg(avg("fare_amount").alias("avg_fare_per_zip"))
+        .withColumnRenamed("pickup_zip", "zip")  # PK = zip
+    )
+
+
 @dlt.table(name="trip_pickup_features",
            comment="Average fare per pickup ZIP",
            table_properties={"quality": "gold"})
 def trip_pickup_features():
-    return (
-        dlt.readStream("silver_nyc_taxi")
-            .groupBy("pickup_zip")
-            .agg(avg("fare_amount").alias("avg_fare_per_zip"))
-            .withColumnRenamed("pickup_zip", "zip")    # PK = zip
-    )
+    silver_df = dlt.readStream("silver_nyc_taxi")
+    return compute_trip_pickup_features(silver_df)
+
 
 # ------------------------------------------------------------------
 # Drop-off feature
 # ------------------------------------------------------------------
 def compute_trip_dropoff_features(df):
-    """
-    Remove invalid rows and keep only the columns required by downstream tasks.
-
-    Parameters
-    ----------
-    df : pyspark.sql.DataFrame
-        Input DataFrame with the raw or silver-layer taxi data.
-
-    Returns
-    -------
-    pyspark.sql.DataFrame
-        Cleaned DataFrame with positive `fare_amount` and `trip_distance`,
-        containing only: fare_amount, pickup_zip, dropoff_zip.
-    """
     return (
         df.filter((F.col("fare_amount") > 0) & (F.col("trip_distance") > 0))
-          .select("fare_amount", "pickup_zip", "dropoff_zip")
+        .select("fare_amount", "pickup_zip", "dropoff_zip")
     )
 
 
@@ -97,17 +92,12 @@ def trip_dropoff_features():
            comment="Denormalised training set",
            table_properties={"quality": "gold"})
 def gold():
-    silver  = dlt.readStream("silver_nyc_taxi")
-    pickup  = dlt.read("trip_pickup_features").withColumnRenamed("zip", "pickup_zip")
+    silver = dlt.readStream("silver_nyc_taxi")
+    pickup = dlt.read("trip_pickup_features").withColumnRenamed("zip", "pickup_zip")
     dropoff = dlt.read("trip_dropoff_features")
     return (
-        silver.join(pickup,  "pickup_zip",  "left")
-              .join(dropoff, "dropoff_zip", "left")
-              .select("fare_amount", "pickup_zip", "dropoff_zip",
-                      "avg_fare_per_zip", "trip_count")
+        silver.join(pickup, "pickup_zip", "left")
+        .join(dropoff, "dropoff_zip", "left")
+        .select("fare_amount", "pickup_zip", "dropoff_zip",
+                "avg_fare_per_zip", "trip_count")
     )
-
-
-
-
-
