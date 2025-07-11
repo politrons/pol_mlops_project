@@ -32,6 +32,8 @@ include:
   - ./resources/training-model-optune-workflow-resource.yml
   - ./resources/training-model-medallion-workflow-resource.yml
   - ./resources/feature-engineering-workflow-resource.yml
+  # Testing
+  - ./resources/test-medallion-architecture-resource.yaml
   # TODO: uncomment once monitoring inference table has been created
   # - ./resources/monitoring-resource.yml
 
