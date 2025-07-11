@@ -5,9 +5,6 @@ import dlt
 from pyspark.sql import functions as F
 from pyspark.sql.functions import col, avg
 
-def hello_world():
-    print("Hello World!")
-
 # ------------------------------------------------------------------
 # Bronze
 # ------------------------------------------------------------------
@@ -53,16 +50,45 @@ def trip_pickup_features():
 # ------------------------------------------------------------------
 # Drop-off feature
 # ------------------------------------------------------------------
-@dlt.table(name="trip_dropoff_features",
-           comment="Trip count per drop-off ZIP",
-           table_properties={"quality": "gold"})
-def trip_dropoff_features():
+def compute_trip_dropoff_features(df):
+    """
+    Remove invalid rows and keep only the columns required by downstream tasks.
+
+    Parameters
+    ----------
+    df : pyspark.sql.DataFrame
+        Input DataFrame with the raw or silver-layer taxi data.
+
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        Cleaned DataFrame with positive `fare_amount` and `trip_distance`,
+        containing only: fare_amount, pickup_zip, dropoff_zip.
+    """
     return (
-        dlt.readStream("silver_nyc_taxi")
-            .groupBy("dropoff_zip")
-            .count()
-            .withColumnRenamed("count", "trip_count")
+        df.filter((F.col("fare_amount") > 0) & (F.col("trip_distance") > 0))
+          .select("fare_amount", "pickup_zip", "dropoff_zip")
     )
+
+
+# --------------------------------------------------------------------------- #
+# 2. DLT wrapper (production entry-point)                                     #
+# --------------------------------------------------------------------------- #
+@dlt.table(
+    name="trip_dropoff_features",
+    comment="Gold-quality features for ML models (one row per trip drop-off)",
+    table_properties={"quality": "gold"},
+)
+def trip_dropoff_features():
+    """
+    Delta Live Tables wrapper around `compute_trip_dropoff_features`.
+
+    DLT injects a streaming DataFrame from the silver layer; the wrapper simply
+    delegates to the pure function so that business logic remains testable.
+    """
+    silver_df = dlt.readStream("silver_nyc_taxi")
+    return compute_trip_dropoff_features(silver_df)
+
 
 # ------------------------------------------------------------------
 # Gold table – model-ready
