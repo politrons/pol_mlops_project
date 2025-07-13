@@ -5,30 +5,12 @@
 
 dbutils.library.restartPython()
 
-import json, sys, pathlib, importlib
 import pytest
 
+import sys
+sys.path.insert(0, '/Workspace/Users/pablo.garcia@marionete.co.uk/.bundle/pol_mlops_project/dev/files/pipelines/')
 
-# ----- CONFIG ----------------------------------------------------------
-LEVELS_UP_TO_FILES = 3   #  tests/pipelines/notebook  -> parents[3] = .../files
-# ----------------------------------------------------------------------
-
-wk_path = json.loads(
-    dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson()
-)["extraContext"]["notebook_path"]
-
-files_dir_ws = pathlib.PurePosixPath(wk_path).parents[LEVELS_UP_TO_FILES]
-
-files_dir_driver = f"/Workspace{files_dir_ws}"
-
-if files_dir_driver not in sys.path:
-    sys.path.insert(0, files_dir_driver)
-    print(f"🔗  Added a sys.path → {files_dir_driver}")
-
-from pyspark.sql import SparkSession
-
-from pipelines.MedallionArchitecture import compute_trip_dropoff_features
-from pipelines.MedallionArchitecture import compute_trip_pickup_features
+from MedallionArchitecture import *
 
 @pytest.mark.usefixtures("spark")
 def test_compute_trip_dropoff_features_fn(spark):
