@@ -23,7 +23,7 @@ variables:
 include:
   # Resources folder contains ML artifact resources for the ML project that defines model and experiment
   # And workflows resources for the ML project including model training -> validation -> deployment,
-  # feature engineering,  batch inference, quality monitoring, metric refresh, alerts and triggering retraining
+  # feature engineering, batch inference, quality monitoring, metric refresh, alerts and triggering retraining
   - ./resources/medallion-architecture-resource.yaml
   - ./resources/auto-ml-resource.yml
   - ./resources/batch-inference-workflow-resource.yml
@@ -34,6 +34,7 @@ include:
   - ./resources/feature-engineering-workflow-resource.yml
   # Testing
   - ./resources/test-medallion-architecture-resource.yaml
+  - ./resources/test-training-model-medallion-resource.yaml
   # TODO: uncomment once monitoring inference table has been created
   # - ./resources/monitoring-resource.yml
 
