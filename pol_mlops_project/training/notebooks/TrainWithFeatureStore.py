@@ -22,7 +22,9 @@
 # COMMAND ----------
 
 import os
-notebook_path =  '/Workspace/' + os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
+
+notebook_path = '/Workspace/' + os.path.dirname(
+    dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
 %cd $notebook_path
 
 # COMMAND ----------
@@ -57,7 +59,6 @@ dbutils.widgets.text(
     label="MLflow experiment name",
 )
 
-
 # Unity Catalog registered model name to use for the trained mode.
 dbutils.widgets.text(
     "model_name", "pol_dev.pol_mlops_project.pol_mlops_project-model", label="Full (Three-Level) Model Name"
@@ -69,7 +70,6 @@ dbutils.widgets.text(
     "pol_dev.pol_mlops_project.fe_trip_pickup_features",
     label="Pickup Features Table",
 )
-
 
 # Dropoff features table name
 dbutils.widgets.text(
@@ -198,7 +198,6 @@ dropoff_feature_lookups = [
 
 # DBTITLE 1, Create Training Dataset
 
-from databricks.feature_engineering import FeatureEngineeringClient
 
 # End any existing runs (in the case this notebook is being run for a second time)
 mlflow.end_run()
@@ -210,17 +209,75 @@ mlflow.start_run()
 # unless additional feature engineering was performed, exclude them to avoid training on them.
 exclude_columns = ["rounded_pickup_datetime", "rounded_dropoff_datetime"]
 
+# Online table
+# -------------
+
+from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTable, OnlineTableSpecTriggeredSchedulingPolicy
+
+online_table_name = "pol_dev.pol_mlops_project.online_features"
+
+pickup_features_online_spec = OnlineTableSpec(
+    primary_key_columns=["zip"],
+    source_table_full_name="pol_dev.pol_mlops_project.fe_trip_pickup_features",
+    run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'}),
+    perform_full_copy=True)
+
+pickup_features_online_table = OnlineTable(
+    name=online_table_name,
+    spec=pickup_features_online_spec
+)
+
+dropoff_features_online_spec = OnlineTableSpec(
+    primary_key_columns=["zip"],
+    source_table_full_name="pol_dev.pol_mlops_project.fe_trip_dropoff_features",
+    run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({'triggered': 'true'}),
+    perform_full_copy=True)
+
+dropoff_features_online_table = OnlineTable(
+    name=online_table_name,
+    spec=dropoff_features_online_spec
+)
+
+# Materialize online table
+# ------------------------
+from databricks.sdk import WorkspaceClient
+
+w = WorkspaceClient()
+
+try:
+    w.online_tables.create_and_wait(table=pickup_features_online_table)
+except Exception as e:
+    if "already exists" in str(e):
+        pass
+    else:
+        raise e
+
+try:
+    w.online_tables.create_and_wait(table=dropoff_features_online_table)
+except Exception as e:
+    if "already exists" in str(e):
+        pass
+    else:
+        raise e
+
+# Training set
+# -------------
+
+from databricks.sdk.version import __version__
+print(__version__)
+
+from databricks.feature_engineering import FeatureEngineeringClient
+
 fe = FeatureEngineeringClient()
 
 # Create the training set that includes the raw input data merged with corresponding features from both feature tables
 training_set = fe.create_training_set(
-    df=taxi_data, # specify the df 
-    feature_lookups=pickup_feature_lookups + dropoff_feature_lookups, 
+    df=taxi_data,  # specify the df
+    feature_lookups=pickup_feature_lookups + dropoff_feature_lookups,
     # both features need to be available; defined in GenerateAndWriteFeatures &/or feature-engineering-workflow-resource.yml
     label="fare_amount",
     exclude_columns=exclude_columns,
 )
-
 
 # Load the TrainingSet into a dataframe which can be passed into sklearn for training a model
 training_df = training_set.load_df()
@@ -242,7 +299,6 @@ import lightgbm as lgb
 from sklearn.model_selection import train_test_split
 import mlflow.lightgbm
 from mlflow.tracking import MlflowClient
-
 
 features_and_label = training_df.columns
 
@@ -270,13 +326,12 @@ model = lgb.train(param, train_lgb_dataset, num_rounds)
 # DBTITLE 1, Log model and return output.
 # Log the trained model with MLflow and package it with feature lookup information.
 fe.log_model(
-    model=model, #specify model
+    model=model,  # specify model
     artifact_path="model_packaged",
     flavor=mlflow.lightgbm,
     training_set=training_set,
     registered_model_name=model_name,
 )
-
 
 # The returned model URI is needed by the model deployment notebook.
 model_version = get_latest_model_version(model_name)

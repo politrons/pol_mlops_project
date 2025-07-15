@@ -45,28 +45,28 @@ targets:
     default: true
     variables:
       catalog_name: pol_dev
-      inference_cluster_id: 0709-133136-30lgshbm
+      inference_cluster_id: 0714-155748-yb66nzly
     workspace:
-      host: https://dbc-fc1f7848-94c3.cloud.databricks.com
+      host: https://adb-3644846982999534.14.azuredatabricks.net
 
   staging:
     variables:
       catalog_name: pol_staging
-      inference_cluster_id: 0709-133136-30lgshbm
+      inference_cluster_id: 0714-155748-yb66nzly
     workspace:
-      host: https://dbc-fc1f7848-94c3.cloud.databricks.com
+      host: https://adb-3644846982999534.14.azuredatabricks.net
 
   prod:
     variables:
       catalog_name: pol_prod
-      inference_cluster_id: 0709-133136-30lgshbm
+      inference_cluster_id: 0714-155748-yb66nzly
     workspace:
-      host: https://dbc-fc1f7848-94c3.cloud.databricks.com
+      host: https://adb-3644846982999534.14.azuredatabricks.net
 
   test:
     variables:
       catalog_name: pol_test
-      inference_cluster_id: 0709-133136-30lgshbm
+      inference_cluster_id: 0714-155748-yb66nzly
     workspace:
-      host: https://dbc-fc1f7848-94c3.cloud.databricks.com
+      host: https://adb-3644846982999534.14.azuredatabricks.net
 
