@@ -196,8 +196,7 @@ dropoff_feature_lookups = [
 
 # COMMAND ----------
 
-# DBTITLE 1, Create Training Dataset
-
+# DBTITLE 1, Create Online tables
 
 # End any existing runs (in the case this notebook is being run for a second time)
 mlflow.end_run()
@@ -214,8 +213,6 @@ exclude_columns = ["rounded_pickup_datetime", "rounded_dropoff_datetime"]
 
 from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTable, OnlineTableSpecTriggeredSchedulingPolicy
 
-online_table_name = "pol_dev.pol_mlops_project.online_features"
-
 pickup_features_online_spec = OnlineTableSpec(
     primary_key_columns=["zip"],
     source_table_full_name="pol_dev.pol_mlops_project.fe_trip_pickup_features",
@@ -223,7 +220,7 @@ pickup_features_online_spec = OnlineTableSpec(
     perform_full_copy=True)
 
 pickup_features_online_table = OnlineTable(
-    name=online_table_name,
+    name="pol_dev.pol_mlops_project.fe_trip_pickup_online_features",
     spec=pickup_features_online_spec
 )
 
@@ -234,7 +231,7 @@ dropoff_features_online_spec = OnlineTableSpec(
     perform_full_copy=True)
 
 dropoff_features_online_table = OnlineTable(
-    name=online_table_name,
+    name="pol_dev.pol_mlops_project.fe_trip_dropoff_online_features",
     spec=dropoff_features_online_spec
 )
 
