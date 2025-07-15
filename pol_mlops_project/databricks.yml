@@ -32,6 +32,8 @@ include:
   - ./resources/training-model-optune-workflow-resource.yml
   - ./resources/training-model-medallion-workflow-resource.yml
   - ./resources/feature-engineering-workflow-resource.yml
+  # Deploy
+  - ./resources/deploy-serving-model-endpoint-resource.yml
   # Testing
   - ./resources/test-medallion-architecture-resource.yaml
   - ./resources/test-training-model-medallion-resource.yaml
