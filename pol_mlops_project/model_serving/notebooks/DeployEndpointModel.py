@@ -9,7 +9,6 @@
 
 import os
 
-from databricks.sdk import WorkspaceClient
 from mlflow.utils.databricks_utils import dbutils
 
 notebook_path = '/Workspace/' + os.path.dirname(

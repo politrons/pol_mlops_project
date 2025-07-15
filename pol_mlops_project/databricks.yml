@@ -37,6 +37,9 @@ include:
   # Testing
   - ./resources/test-medallion-architecture-resource.yaml
   - ./resources/test-training-model-medallion-resource.yaml
+  # Test Framework
+  ## Integration test
+  - ./resources/integration-test-serving-model-endpoint-resource.yml
   # TODO: uncomment once monitoring inference table has been created
   # - ./resources/monitoring-resource.yml
 
