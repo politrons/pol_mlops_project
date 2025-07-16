@@ -1,17 +1,13 @@
 # Databricks notebook source
 # ----------------------------------------------------------------------------
-# Locust Ultra-Min Notebook (v6) – Minimal smoke/load from Databricks
+# Performance test Locust
 # ----------------------------------------------------------------------------
 # What this does:
 #   * Install Locust
 #   * Configure host, endpoint, token, payload
 #   * Run in-notebook Locust using FastHttpUser
 #   * Target configurable TPS via constant pacing (interval = 1 / tps_target)
-#   * NO warmup, NO external files, NO range validation
 #   * Success criteria: HTTP 200 AND response JSON contains at least one prediction
-# ----------------------------------------------------------------------------
-# Re-run the final cell with different tps_target/duration to simulate cold vs warm.
-# ----------------------------------------------------------------------------
 
 # COMMAND ----------
 # MAGIC %pip install -q locust geventhttpclient
@@ -31,11 +27,26 @@ import gevent  # safe after patch
 print("gevent patched. Locust imported cleanly.")
 
 from typing import Any, Dict
+from mlflow.utils.databricks_utils import dbutils
 
-DATABRICKS_HOST = "https://adb-3644846982999534.14.azuredatabricks.net"  # <-- change
-ENDPOINT_NAME = "pol_endpoint"  # <-- change
+dbutils.widgets.text("DATABRICKS_HOST", "https://adb-3644846982999534.14.azuredatabricks.net",
+                     label="Databricks Host")
 
+dbutils.widgets.text("ENDPOINT_NAME", "pol_endpoint",
+                     label="Endpoint Name")
+
+dbutils.widgets.text("tps_target", "10.0",
+                     label="tps_target Name")
+
+dbutils.widgets.text("duration_s", "300",
+                     label="duration_s Name")
+
+DATABRICKS_HOST = dbutils.widgets.get("DATABRICKS_HOST")
+ENDPOINT_NAME = dbutils.widgets.get("ENDPOINT_NAME")
 TOKEN = dbutils.secrets.get("my-scope", "databricks-token")
+
+tps_target = float(dbutils.widgets.get("tps_target"))
+duration_s = int(dbutils.widgets.get("duration_s"))
 
 # Relative path used by Locust
 INVOKE_PATH = f"/serving-endpoints/{ENDPOINT_NAME}/invocations"
@@ -62,12 +73,7 @@ print("Target:", DATABRICKS_HOST + INVOKE_PATH)
 
 
 # COMMAND ----------
-# MAGIC %md
-# MAGIC ## Minimal prediction check
-# MAGIC We only care that JSON contains at least one numeric prediction.
-
-
-# COMMAND ----------
+# MAGIC ## Run performance test.
 
 def run_locust(host: str,
                path: str,
@@ -133,45 +139,33 @@ def run_locust(host: str,
     env.runner.quit()
     env.runner.greenlet.join()
 
-    s = env.stats.total
+    stats = env.stats.total
     summary = {
-        "requests": s.num_requests,
-        "failures": s.num_failures,
-        "avg_ms": round(s.avg_response_time, 2),
-        "p50_ms": round(s.median_response_time or 0.0, 2),
-        "p95_ms": round(s.get_response_time_percentile(0.95), 2),
-        "p99_ms": round(s.get_response_time_percentile(0.99), 2),
-        "min_ms": round(s.min_response_time or 0.0, 2),
-        "max_ms": round(s.max_response_time or 0.0, 2),
-        "reqs_per_s_observed": round((s.num_requests / duration_s) if duration_s else 0.0, 3),
+        "requests": stats.num_requests,
+        "failures": stats.num_failures,
+        "avg_ms": round(stats.avg_response_time, 2),
+        "p50_ms": round(stats.median_response_time or 0.0, 2),
+        "p95_ms": round(stats.get_response_time_percentile(0.95), 2),
+        "p99_ms": round(stats.get_response_time_percentile(0.99), 2),
+        "min_ms": round(stats.min_response_time or 0.0, 2),
+        "max_ms": round(stats.max_response_time or 0.0, 2),
+        "reqs_per_s_observed": round((stats.num_requests / duration_s) if duration_s else 0.0, 3),
         "tps_target": tps_target,
     }
     return summary, env
 
 
 # COMMAND ----------
-# MAGIC %md
-# MAGIC ## Run Example (~1 TPS · 30s)
-# MAGIC Change tps_target / duration_s / check_prediction and re-run.
+# MAGIC ## Run Simulation
 
-# COMMAND ----------
 summary, env = run_locust(
     host=DATABRICKS_HOST,
     path=INVOKE_PATH,
     token=TOKEN,
     payload=PAYLOAD,
-    tps_target=10.0,
-    duration_s=300,
+    tps_target=tps_target,
+    duration_s=duration_s,
     verbose=False,
 )
 summary
 
-# COMMAND ----------
-# MAGIC %md
-# MAGIC ## Quick reruns
-# MAGIC * Cold vs hot: run above cell twice.
-# MAGIC * Higher rate: set tps_target=5.
-# MAGIC * No JSON check: set check_prediction=False.
-
-# COMMAND ----------
-print("Ready. Re-run the previous cell with your parameters.")

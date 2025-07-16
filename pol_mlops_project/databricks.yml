@@ -40,6 +40,8 @@ include:
   # Test Framework
   ## Integration test
   - ./resources/integration-test-serving-model-endpoint-resource.yml
+  ## Performance test
+  - ./resources/performance-test-serving-model-endpoint-resource.yml
   # TODO: uncomment once monitoring inference table has been created
   # - ./resources/monitoring-resource.yml
 
