@@ -1,4 +1,5 @@
-#This resource apply medallion architecture + training + validation
+
+
 common_permissions: &permissions
   permissions:
     - level: CAN_VIEW
@@ -6,29 +7,29 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    model_medallion_training_job:
-      name: ${bundle.target}-pol_mlops_project-medallion-model-training-job
+    model_training_job:
+      name: ${bundle.target}-pol_mlops_project-model-training-fe-job
       tasks:
         - task_key: Train
-          existing_cluster_id: ${var.inference_cluster_id}
+          existing_cluster_id: 0714-155748-yb66nzly
           notebook_task:
-            notebook_path: ../training/notebooks/TrainMedallionArchitecture.py
+            notebook_path: ../../training/notebooks/TrainWithFeatureStore.py
             base_parameters:
               env: ${bundle.target}
               # TODO: Update training_data_path
               training_data_path: /databricks-datasets/nyctaxi-with-zipcodes/subsampled
               experiment_name: ${var.experiment_name}
               model_name: ${var.catalog_name}.pol_mlops_project.${var.model_name}
-              pickup_features_table: ${var.catalog_name}.pol_mlops_project.trip_pickup_features
-              dropoff_features_table: ${var.catalog_name}.pol_mlops_project.trip_dropoff_features
+              pickup_features_table: ${var.catalog_name}.pol_mlops_project.fe_trip_pickup_features
+              dropoff_features_table: ${var.catalog_name}.pol_mlops_project.fe_trip_dropoff_features
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: ModelValidation
-          existing_cluster_id: ${var.inference_cluster_id}
+          existing_cluster_id: 0714-155748-yb66nzly
           depends_on:
             - task_key: Train
           notebook_task:
-            notebook_path: ../validation/notebooks/ModelValidation.py
+            notebook_path: ../../validation/notebooks/ModelValidation.py
             base_parameters:
               experiment_name: ${var.experiment_name}
               # The `run_mode` defines whether model validation is enabled or not.
@@ -67,11 +68,11 @@ resources:
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: ModelDeployment
-          existing_cluster_id: ${var.inference_cluster_id}
+          existing_cluster_id: 0714-155748-yb66nzly
           depends_on:
             - task_key: ModelValidation
           notebook_task:
-            notebook_path: ../deployment/model_deployment/notebooks/ModelDeployment.py
+            notebook_path: ../../deployment/model_deployment/notebooks/ModelDeployment.py
             base_parameters:
               env: ${bundle.target}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run

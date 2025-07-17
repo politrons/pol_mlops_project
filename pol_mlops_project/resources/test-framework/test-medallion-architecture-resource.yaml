@@ -5,17 +5,19 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    deploy-serving-model-endpoint_job:
-      name: ${bundle.target}-pol_mlops_project-deploy-serving-model-endpoint
+    test_medallion_architecture_job:
+      name: ${bundle.target}-pol_mlops_project-test-medallion-architecture
       tasks:
-        - task_key: DeployEndpointModel
-          existing_cluster_id: ${var.inference_cluster_id}
+        - task_key: TestMedallionArchitectureFeatures
+          existing_cluster_id: 0714-155748-yb66nzly
           notebook_task:
-            notebook_path: ../model_serving/notebooks/DeployEndpointModel.py
+            notebook_path: ../../tests/pipelines/notebooks/medallion_architecture_test.py
             base_parameters:
-              model_name: ${var.catalog_name}.pol_mlops_project.${var.model_name}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+      schedule:
+        quartz_cron_expression: "0 0 7 * * ?" # daily at 7am
+        timezone_id: UTC
       <<: *permissions
       # If you want to turn on notifications for this job, please uncomment the below code,
       # and provide a list of emails to the on_failure argument.

@@ -11,7 +11,7 @@ resources:
         - task_key: PickupFeatures
           existing_cluster_id: 0714-155748-yb66nzly
           notebook_task:
-            notebook_path: ../feature_engineering/notebooks/GenerateAndWriteFeatures.py
+            notebook_path: ../../feature_engineering/notebooks/GenerateAndWriteFeatures.py
             base_parameters:
               # TODO modify these arguments to reflect your setup.
               input_table_path: /databricks-datasets/nyctaxi-with-zipcodes/subsampled
@@ -27,7 +27,7 @@ resources:
         - task_key: DropoffFeatures
           existing_cluster_id: 0714-155748-yb66nzly
           notebook_task:
-            notebook_path: ../feature_engineering/notebooks/GenerateAndWriteFeatures.py
+            notebook_path: ../../feature_engineering/notebooks/GenerateAndWriteFeatures.py
             base_parameters:
               # TODO: modify these arguments to reflect your setup.
               input_table_path: /databricks-datasets/nyctaxi-with-zipcodes/subsampled

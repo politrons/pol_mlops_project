@@ -11,7 +11,7 @@ resources:
         - task_key: ModelServingIntegrationTest
           existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
-            notebook_path: ../test-framework/integration-test/ModelServingIntegrationTest.py
+            notebook_path: ../../test-framework/integration-test/ModelServingIntegrationTest.py
             base_parameters:
               model_name: ${var.catalog_name}.pol_mlops_project.${var.model_name}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run

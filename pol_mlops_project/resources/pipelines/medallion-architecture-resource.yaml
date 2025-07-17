@@ -9,7 +9,7 @@ resources:
       edition: ADVANCED
       libraries:
         - file:
-            path: ../pipelines/MedallionArchitecture.py
+            path: ../../pipelines/MedallionArchitecture.py
       clusters:
         - label: default
           num_workers: 1

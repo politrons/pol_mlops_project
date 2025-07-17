@@ -2,7 +2,7 @@
 
 To enable monitoring as part of a scheduled Databricks workflow, please:
 - Create the inference table that you want to monitor and was passed in as an initialization parameter.
-- Update all the TODOs in the [monitoring resource file](../resources/monitoring-resource.yml).
+- Update all the TODOs in the [monitoring resource file](../resources/monitoring/monitoring-resource.yml).
 - Uncomment the monitoring workflow from the main Databricks Asset Bundles file [databricks.yml](../databricks.yml).
 
 

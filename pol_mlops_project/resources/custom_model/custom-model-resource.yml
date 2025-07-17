@@ -5,18 +5,19 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    test_train_medallion_architecture_job:
-      name: ${bundle.target}-pol_mlops_project-test-train_medallion_architecture
+    custom-model_job:
+      name: ${bundle.target}-pol_mlops_project-custom-model
       tasks:
-        - task_key: TestMedallionArchitectureFeatures
+        - task_key: CustomModel
           existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
-            notebook_path: ../tests/training/train_medallion_architecture_test.py
+            notebook_path: ../../custom_model/notebooks/CustomModel.py
             base_parameters:
+              experiment_name: ${var.experiment_name}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:
-        quartz_cron_expression: "0 0 7 * * ?" # daily at 7am
+        quartz_cron_expression: "0 0 10 * * ?" # daily at 9am
         timezone_id: UTC
       <<: *permissions
       # If you want to turn on notifications for this job, please uncomment the below code,

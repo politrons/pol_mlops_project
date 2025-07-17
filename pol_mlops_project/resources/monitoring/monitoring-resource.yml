@@ -32,7 +32,7 @@ resources:
         - task_key: monitored_metric_violation_check
           existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
-            notebook_path: ../monitoring/notebooks/MonitoredMetricViolationCheck.py
+            notebook_path: ../../monitoring/notebooks/MonitoredMetricViolationCheck.py
             base_parameters:
               env: ${bundle.target}
               table_name_under_monitor: dev.pol_mlops_project.predictions

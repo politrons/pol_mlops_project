@@ -139,12 +139,12 @@ in staging and prod.
 Its central purpose is to evaluate a registered model and validate its quality before deploying the model to Production/Staging.
 
 Model validation contains three components: 
-* [model-workflow-resource.yml](training-model-fe-workflow-resource.yml) contains the resource config and input parameters for model validation.
+* [model-workflow-resource.yml](training/training-model-fe-workflow-resource.yml) contains the resource config and input parameters for model validation.
 * [validation.py](../validation/validation.py) defines custom metrics and validation thresholds that are referenced by the above resource config files.
 * [notebooks/ModelValidation](../validation/notebooks/ModelValidation.py) contains the validation job implementation. In most cases you don't need to modify this file.
 
 To set up and enable model validation, update [validation.py](../validation/validation.py) to return desired custom metrics and validation thresholds, then 
-resolve the `TODOs` in the ModelValidation task of [model-workflow-resource.yml](training-model-fe-workflow-resource.yml).
+resolve the `TODOs` in the ModelValidation task of [model-workflow-resource.yml](training/training-model-fe-workflow-resource.yml).
 
 
 ### Setting up monitoring
@@ -157,12 +157,12 @@ Monitoring contains four components:
 * [metric_violation_check_query.py](../monitoring/metric_violation_check_query.py) defines a query that checks for violation of the monitored metric.
 * [notebooks/MonitoredMetricViolationCheck](../monitoring/notebooks/MonitoredMetricViolationCheck.py) acts as an entry point, executing the violation check query against the monitored inference table.
 It emits a boolean value based on the query result.
-* [monitoring-resource.yml](./monitoring-resource.yml) contains the resource config, inputs parameters for monitoring, and orchestrates model retraining based on monitoring. It first runs the [notebooks/MonitoredMetricViolationCheck](../monitoring/notebooks/MonitoredMetricViolationCheck.py)
+* [monitoring-resource.yml](monitoring/monitoring-resource.yml) contains the resource config, inputs parameters for monitoring, and orchestrates model retraining based on monitoring. It first runs the [notebooks/MonitoredMetricViolationCheck](../monitoring/notebooks/MonitoredMetricViolationCheck.py)
 entry point then decides whether to execute the model retraining workflow.
 
 To set up and enable monitoring:
-* If it is not done already, generate inference table, join it with ground truth labels, and update the table name in [monitoring-resource.yml](./monitoring-resource.yml).
-* Resolve the `TODOs`  in [monitoring-resource.yml](./monitoring-resource.yml)
+* If it is not done already, generate inference table, join it with ground truth labels, and update the table name in [monitoring-resource.yml](monitoring/monitoring-resource.yml).
+* Resolve the `TODOs`  in [monitoring-resource.yml](monitoring/monitoring-resource.yml)
 * Uncomment the monitoring workflow in [databricks.yml](../databricks.yml)
 * OPTIONAL: Update the query in [metric_violation_check_query.py](../monitoring/metric_violation_check_query.py) to customize when the metric is considered to be in violation.
 
