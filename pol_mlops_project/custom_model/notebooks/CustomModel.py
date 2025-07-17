@@ -128,9 +128,6 @@ with mlflow.start_run(run_name="Custom model"):
 
     mlflow.set_registry_uri("databricks-uc")
 
-    from mlflow.models import set_model
-    from cascade_ab_model import CascadeABModel
-
     model_config = {}
 
     mlflow.end_run()

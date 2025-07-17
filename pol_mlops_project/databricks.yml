@@ -33,6 +33,7 @@ include:
   - ./resources/training/training-model-fe-workflow-resource.yml
   - ./resources/training/training-model-optune-workflow-resource.yml
   - ./resources/training/training-model-medallion-workflow-resource.yml
+  - ./resources/training/training-plain-model-workflow-resource.yml
   # Custom models
   - ./resources/custom_model/custom-model-resource.yml
   # Model_serving

@@ -56,7 +56,7 @@ response = w.serving_endpoints.query(
 )
 
 # Extract the first prediction from the list
-print("Response from Serving endpoint: ", response)
+print("Response: ", response)
 # prediction = float(response.predictions[0])
 # prediction
 # Assert that the prediction is within the expected range

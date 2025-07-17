@@ -15,19 +15,14 @@ notebook_path = '/Workspace/' + os.path.dirname(
 # MAGIC %pip install -r ../../requirements.txt
 
 # COMMAND ----------
-# Reinicia el intérprete de Python para que %pip surta efecto
-# (IMPORTANTE: todas las importaciones deben repetirse en celdas posteriores)
 dbutils.library.restartPython()
 
 # COMMAND ----------
-# DBTITLE 1,Notebook arguments
-# Vuelve a importar tras restart
 import os
 from mlflow.tracking import MlflowClient
 import mlflow
 
 # Notebook Environment
-# (mismo set de widgets que otros notebooks para compatibilidad con jobs)
 dbutils.widgets.dropdown("env", "staging", ["staging", "prod"], "Environment Name")
 env = dbutils.widgets.get("env")
 
