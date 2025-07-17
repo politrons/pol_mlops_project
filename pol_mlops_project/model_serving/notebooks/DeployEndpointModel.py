@@ -32,13 +32,17 @@ dbutils.widgets.text(
 
 model_name = dbutils.widgets.get("model_name")
 
+dbutils.widgets.text(
+    "model_endpoint", "pol_endpoint", label="model_endpoint"
+)
+
+model_endpoint = dbutils.widgets.get("model_endpoint")
 
 from databricks.sdk.service.serving import EndpointCoreConfigInput
 from mlflow import MlflowClient
 
 client = MlflowClient()
 
-fs_endpoint_name_online = "pol_endpoint"
 fs_model_version_online = client.get_model_version_by_alias(name=model_name, alias="champion").version
 
 fs_endpoint_config_dict = {
@@ -60,10 +64,10 @@ w = WorkspaceClient()
 
 try:
     w.serving_endpoints.create_and_wait(
-        name=fs_endpoint_name_online,
+        name=model_endpoint,
         config=fs_endpoint_config
     )
-    print(f"Creating endpoint {fs_endpoint_name_online} with models {model_name} version {fs_model_version_online}")
+    print(f"Creating endpoint {model_endpoint} with models {model_name} version {fs_model_version_online}")
 except Exception as e:
     if "already exists" in str(e):
         pass

@@ -36,13 +36,15 @@ include:
   # Custom models
   - ./resources/custom_model/custom-model-resource.yml
   # Model_serving
-  - ./resources/model_serving/deploy-serving-model-endpoint-resource.yml
+  - ./resources/model_serving/deploy-model-serving-endpoint-resource.yml
+  - ./resources/model_serving/deploy-ab-model-serving-endpoint-resource.yml
   # Testing
   - ./resources/test-framework/test-medallion-architecture-resource.yaml
   - ./resources/test-framework/test-training-model-medallion-resource.yaml
   # Test Framework
   ## Integration test
-  - ./resources/test-framework/integration-test-serving-model-endpoint-resource.yml
+  - ./resources/test-framework/integration-test-model-serving-endpoint-resource.yml
+  - ./resources/test-framework/integration-test-ab-model-serving-endpoint-resource.yml
   ## Performance test
   - ./resources/test-framework/performance-test-serving-model-endpoint-resource.yml
   # TODO: uncomment once monitoring inference table has been created

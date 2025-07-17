@@ -58,42 +58,19 @@ def get_latest_model_version(model_name):
 
 
 # COMMAND ----------
-import mlflow
 from mlflow import MlflowClient
-
-import sys
-
-dbutils.widgets.text("model_path",
-                     "/Workspace/Users/pablo.garcia@marionete.co.uk/.bundle/pol_mlops_project/dev/files/custom_model/classes/",
-                     label="module_name")
-model_path = dbutils.widgets.get("model_path")
-
-dbutils.widgets.text("module_name", "cascade_ab_model", label="module_name")
-module_name = dbutils.widgets.get("module_name")
-
-dbutils.widgets.text("module_func_name", "CascadeABModel", label="module_func_name")
-module_func_name = dbutils.widgets.get("module_func_name")
-
-sys.path.append(model_path)
-
-from importlib import import_module
-
-mod = import_module(module_name)
-custom_model = getattr(mod, module_func_name)
-
-model_version = get_latest_model_version(model_name)
-model_uri = f"models:/{model_name}/{model_version}"
-
-wrapper_model = custom_model(model_uri, model_uri)
+import mlflow
 
 # ----------
 # Log model
 # ----------
 with mlflow.start_run(run_name="Custom model"):
-    # infer signature on a tiny sample (fast)
+    import os
     import pandas as pd
     import mlflow
     from mlflow.models import infer_signature
+
+
 
     # ------------------------------------------------------------------
     # Define the input columns your wrapped model will accept
@@ -131,15 +108,65 @@ with mlflow.start_run(run_name="Custom model"):
     })
 
     # ------------------------------------------------------------------
-    # Infer a signature from the sample inputs & outputs
+    # Log custom model using model_path
     # ------------------------------------------------------------------
     signature = infer_signature(model_input=sample_df, model_output=sample_out_df)
 
-    wrapper_model_name = "pol_dev.pol_mlops_project.pol_mlops_project-custom-ab-model"
+    wrapper_model_name="pol_dev.pol_mlops_project.pol_mlops_project-custom-ab-model"
 
-    mlflow.lightgbm.log_model(
-        wrapper_model,
-        artifact_path="model",
-        registered_model_name=wrapper_model_name,
-        signature=signature
-    )
+    model_path = '/Workspace/' + os.path.dirname(
+        dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())  + "/cascade_ab_model.py"
+
+    model_version = get_latest_model_version(model_name)
+    model_uri = f"models:/{model_name}/{model_version}"
+
+    # model_config = {
+    #     "model_a_uri": model_uri,
+    #     "model_b_uri": model_uri,
+    # }
+    #
+    # mlflow.pyfunc.log_model(
+    #     "model",
+    #     python_model=model_path,
+    #     model_config=model_config,
+    #     registered_model_name=wrapper_model_name,
+    #     pip_requirements=["mlflow", "pandas"],
+    #     signature=signature,
+    # )
+
+    import mlflow
+    from mlflow import MlflowClient
+
+    base_model_uri = f"models:/{model_name}@champion"
+    local_base = mlflow.artifacts.download_artifacts(base_model_uri)
+
+    mlflow.set_registry_uri("databricks-uc")
+
+    from mlflow.models import set_model
+    from cascade_ab_model import CascadeABModel
+
+    model_config = {}
+
+    mlflow.end_run()
+
+    with mlflow.start_run():
+        logged_info = mlflow.pyfunc.log_model(
+            artifact_path="model",
+            python_model=model_path,
+            artifacts={"model_a": local_base, "model_b": local_base},
+            model_config=model_config,
+            pip_requirements=["mlflow", "pandas"],
+            registered_model_name=wrapper_model_name,
+            signature=signature,
+        )
+
+    # ------------------------------------------------------------------
+    # Add alias to model
+    # ------------------------------------------------------------------
+    client = MlflowClient(registry_uri="databricks-uc")
+    target_alias="champion"
+    wrapper_model_version = get_latest_model_version(wrapper_model_name)
+    client.set_registered_model_alias(
+        name=wrapper_model_name,
+        alias=target_alias,
+        version=str(wrapper_model_version))
