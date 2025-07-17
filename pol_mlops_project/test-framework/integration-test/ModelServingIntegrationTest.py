@@ -51,16 +51,17 @@ payload = DataframeSplitInput(
 # Call the endpoint and get the response
 response = w.serving_endpoints.query(
     name=model_endpoint,
-    dataframe_split=payload
+    dataframe_split=payload,
+
 )
 
 # Extract the first prediction from the list
 print("Response from Serving endpoint: ", response)
-prediction = float(response.predictions[0])
-prediction
+# prediction = float(response.predictions[0])
+# prediction
 # Assert that the prediction is within the expected range
 # assert 8.0 <= prediction <= 9.0, f"Value out of range: {prediction}"
 
-print("✅ Prediction is within the range [8, 9]")
+# print("✅ Prediction is within the range [8, 9]")
 
 

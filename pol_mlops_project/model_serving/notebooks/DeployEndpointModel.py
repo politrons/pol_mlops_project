@@ -27,13 +27,13 @@ dbutils.library.restartPython()
 
 # Unity Catalog registered model name to use for the trained mode.
 dbutils.widgets.text(
-    "model_name", "pol_dev.pol_mlops_project.pol_mlops_project-model", label="Full (Three-Level) Model Name"
+    "model_name", "", label="Full (Three-Level) Model Name"
 )
 
 model_name = dbutils.widgets.get("model_name")
 
 dbutils.widgets.text(
-    "model_endpoint", "pol_endpoint", label="model_endpoint"
+    "model_endpoint", "", label="model_endpoint"
 )
 
 model_endpoint = dbutils.widgets.get("model_endpoint")

@@ -29,7 +29,7 @@ dbutils.library.restartPython()
 
 # Unity Catalog registered model name to use for the trained mode.
 dbutils.widgets.text(
-    "model_name", "pol_dev.pol_mlops_project.pol_mlops_project-model", label="Full (Three-Level) Model Name"
+    "model_name", "pol_dev.pol_mlops_project.pol_mlops_project-plain-model", label="Full (Three-Level) Model Name"
 )
 
 model_name = dbutils.widgets.get("model_name")
@@ -112,27 +112,13 @@ with mlflow.start_run(run_name="Custom model"):
     # ------------------------------------------------------------------
     signature = infer_signature(model_input=sample_df, model_output=sample_out_df)
 
-    wrapper_model_name="pol_dev.pol_mlops_project.pol_mlops_project-custom-ab-model"
+    wrapper_model_name="pol_dev.pol_mlops_project.pol_mlops_project-custom-ab-plain-model"
 
     model_path = '/Workspace/' + os.path.dirname(
-        dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())  + "/cascade_ab_model.py"
+        dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())  + "/cascade_ab_plain_model.py"
 
     model_version = get_latest_model_version(model_name)
     model_uri = f"models:/{model_name}/{model_version}"
-
-    # model_config = {
-    #     "model_a_uri": model_uri,
-    #     "model_b_uri": model_uri,
-    # }
-    #
-    # mlflow.pyfunc.log_model(
-    #     "model",
-    #     python_model=model_path,
-    #     model_config=model_config,
-    #     registered_model_name=wrapper_model_name,
-    #     pip_requirements=["mlflow", "pandas"],
-    #     signature=signature,
-    # )
 
     import mlflow
     from mlflow import MlflowClient
@@ -155,7 +141,7 @@ with mlflow.start_run(run_name="Custom model"):
             python_model=model_path,
             artifacts={"model_a": local_base, "model_b": local_base},
             model_config=model_config,
-            pip_requirements=["mlflow", "pandas"],
+            pip_requirements=["mlflow", "pandas","lightgbm"],
             registered_model_name=wrapper_model_name,
             signature=signature,
         )
