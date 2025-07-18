@@ -13,7 +13,6 @@ resources:
           notebook_task:
             notebook_path: ../../../test-framework/integration-test/ModelServingIntegrationTest.py
             base_parameters:
-              model_name: ${var.catalog_name}.pol_mlops_project.${var.model_name}
               model_endpoint: "ab_endpoint"
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}

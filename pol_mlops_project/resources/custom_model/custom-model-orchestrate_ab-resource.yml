@@ -5,19 +5,21 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    integration-test-ab-plain-model-serving-endpoint_job:
-      name: ${bundle.target}-pol_mlops_project-integration-test-ab-plain-model-serving-endpoint
+    custom-model_orchestrate_ab_model-job:
+      name: ${bundle.target}-pol_mlops_project-custom-model_orchestrate_ab_model
       tasks:
-        - task_key: ModelServingIntegrationTest
+        - task_key: CustomModel
           existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
-            notebook_path: ../../../test-framework/integration-test/ModelServingIntegrationTest.py
+            notebook_path: ../../custom_model/notebooks/CustomModel.py
             base_parameters:
-              model_endpoint: "ab_plain_endpoint"
+              experiment_name: ${var.experiment_name}
+              custom_model_file_name: "orchestrate_ab_model.py"
+              custom_model_name: "pol_dev.pol_mlops_project.pol_mlops_project-custom-orchestrate_ab-model"
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:
-        quartz_cron_expression: "0 0 9 * * ?" # daily at 9am
+        quartz_cron_expression: "0 0 10 * * ?" # daily at 9am
         timezone_id: UTC
       <<: *permissions
       # If you want to turn on notifications for this job, please uncomment the below code,

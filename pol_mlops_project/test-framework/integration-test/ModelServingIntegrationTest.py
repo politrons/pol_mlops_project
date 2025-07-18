@@ -24,7 +24,7 @@ notebook_path = '/Workspace/' + os.path.dirname(
 dbutils.library.restartPython()
 
 dbutils.widgets.text(
-    "model_endpoint", "pol_endpoint", label="model_endpoint"
+    "model_endpoint", "", label="model_endpoint"
 )
 
 model_endpoint = dbutils.widgets.get("model_endpoint")

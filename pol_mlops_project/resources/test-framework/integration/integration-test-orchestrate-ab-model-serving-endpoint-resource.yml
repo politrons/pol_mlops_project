@@ -5,20 +5,21 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    integration-test-ab-plain-model-serving-endpoint_job:
-      name: ${bundle.target}-pol_mlops_project-integration-test-ab-plain-model-serving-endpoint
+    integration-test-orchestrate-ab-model-serving-endpoint_job:
+      name: ${bundle.target}-pol_mlops_project-integration-test-orchestrate-ab-model-serving-endpoint
       tasks:
         - task_key: ModelServingIntegrationTest
           existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
             notebook_path: ../../../test-framework/integration-test/ModelServingIntegrationTest.py
             base_parameters:
-              model_endpoint: "ab_plain_endpoint"
+              model_endpoint: "ab_orchestrate_endpoint"
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:
         quartz_cron_expression: "0 0 9 * * ?" # daily at 9am
         timezone_id: UTC
+#        pause_status: UNPAUSED
       <<: *permissions
       # If you want to turn on notifications for this job, please uncomment the below code,
       # and provide a list of emails to the on_failure argument.

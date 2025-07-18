@@ -52,12 +52,23 @@ dbutils.widgets.text(
     label="MLflow experiment name",
 )
 
+dbutils.widgets.text("DATABRICKS_HOST", "https://adb-3644846982999534.14.azuredatabricks.net",
+                     label="Databricks Host")
+
+DATABRICKS_HOST = dbutils.widgets.get("DATABRICKS_HOST")
+TOKEN = dbutils.secrets.get("my-scope", "databricks-token")
+
 experiment_name = dbutils.widgets.get("experiment_name")
 
 import mlflow
 
 mlflow.set_registry_uri('databricks-uc')
 mlflow.set_experiment(experiment_name)
+
+
+# COMMAND ----------
+from mlflow import MlflowClient
+import mlflow
 
 def get_latest_model_version(model_name):
     latest_version = 1
@@ -68,11 +79,6 @@ def get_latest_model_version(model_name):
             latest_version = version_int
     return latest_version
 
-
-# COMMAND ----------
-from mlflow import MlflowClient
-import mlflow
-
 # ----------
 # Log model
 # ----------
@@ -81,8 +87,6 @@ with mlflow.start_run(run_name="Custom model"):
     import pandas as pd
     import mlflow
     from mlflow.models import infer_signature
-
-
 
     # ------------------------------------------------------------------
     # Define the input columns your wrapped model will accept
@@ -138,7 +142,7 @@ with mlflow.start_run(run_name="Custom model"):
 
     mlflow.set_registry_uri("databricks-uc")
 
-    model_config = {}
+    model_config = {"host": DATABRICKS_HOST, "token": TOKEN}
 
     mlflow.end_run()
 
