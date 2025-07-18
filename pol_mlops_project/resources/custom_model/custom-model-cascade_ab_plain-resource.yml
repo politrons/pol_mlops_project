@@ -5,8 +5,8 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    custom-model_job:
-      name: ${bundle.target}-pol_mlops_project-custom-model
+    custom-model_cascade_ab_plain-job:
+      name: ${bundle.target}-pol_mlops_project-custom-model_cascade_ab_plain
       tasks:
         - task_key: CustomModel
           existing_cluster_id: ${var.inference_cluster_id}
@@ -14,6 +14,8 @@ resources:
             notebook_path: ../../custom_model/notebooks/CustomModel.py
             base_parameters:
               experiment_name: ${var.experiment_name}
+              custom_model_file_name: "cascade_ab_plain_model.py"
+              custom_model_name: "pol_dev.pol_mlops_project.pol_mlops_project-custom-ab-plain-model"
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:

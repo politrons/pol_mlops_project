@@ -32,7 +32,7 @@ from mlflow.utils.databricks_utils import dbutils
 dbutils.widgets.text("DATABRICKS_HOST", "https://adb-3644846982999534.14.azuredatabricks.net",
                      label="Databricks Host")
 
-dbutils.widgets.text("ENDPOINT_NAME", "pol_endpoint",
+dbutils.widgets.text("ENDPOINT_NAME", "",
                      label="Endpoint Name")
 
 dbutils.widgets.text("tps_target", "10.0",

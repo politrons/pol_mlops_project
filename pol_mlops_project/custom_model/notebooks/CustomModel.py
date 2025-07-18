@@ -35,6 +35,18 @@ dbutils.widgets.text(
 model_name = dbutils.widgets.get("model_name")
 
 dbutils.widgets.text(
+    "custom_model_file_name", "cascade_ab_plain_model.py", label="custom_model_file_name"
+)
+
+custom_model_file_name = dbutils.widgets.get("custom_model_file_name")
+
+dbutils.widgets.text(
+    "custom_model_name", "pol_dev.pol_mlops_project.pol_mlops_project-custom-ab-plain-model", label="custom_model_name"
+)
+
+custom_model_name = dbutils.widgets.get("custom_model_name")
+
+dbutils.widgets.text(
     "experiment_name",
     f"/pol_dev-pol_mlops_project-experiment",
     label="MLflow experiment name",
@@ -112,10 +124,8 @@ with mlflow.start_run(run_name="Custom model"):
     # ------------------------------------------------------------------
     signature = infer_signature(model_input=sample_df, model_output=sample_out_df)
 
-    wrapper_model_name="pol_dev.pol_mlops_project.pol_mlops_project-custom-ab-plain-model"
-
     model_path = '/Workspace/' + os.path.dirname(
-        dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())  + "/cascade_ab_plain_model.py"
+        dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())  + "/" + custom_model_file_name
 
     model_version = get_latest_model_version(model_name)
     model_uri = f"models:/{model_name}/{model_version}"
@@ -139,7 +149,7 @@ with mlflow.start_run(run_name="Custom model"):
             artifacts={"model_a": local_base, "model_b": local_base},
             model_config=model_config,
             pip_requirements=["mlflow", "pandas","lightgbm"],
-            registered_model_name=wrapper_model_name,
+            registered_model_name=custom_model_name,
             signature=signature,
         )
 
@@ -148,8 +158,8 @@ with mlflow.start_run(run_name="Custom model"):
     # ------------------------------------------------------------------
     client = MlflowClient(registry_uri="databricks-uc")
     target_alias="champion"
-    wrapper_model_version = get_latest_model_version(wrapper_model_name)
+    wrapper_model_version = get_latest_model_version(custom_model_name)
     client.set_registered_model_alias(
-        name=wrapper_model_name,
+        name=custom_model_name,
         alias=target_alias,
         version=str(wrapper_model_version))

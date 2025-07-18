@@ -5,13 +5,13 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    test_medallion_architecture_job:
-      name: ${bundle.target}-pol_mlops_project-test-medallion-architecture
+    test_train_medallion_architecture_job:
+      name: ${bundle.target}-pol_mlops_project-test-train_medallion_architecture
       tasks:
         - task_key: TestMedallionArchitectureFeatures
-          existing_cluster_id: 0714-155748-yb66nzly
+          existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
-            notebook_path: ../../tests/pipelines/notebooks/medallion_architecture_test.py
+            notebook_path: ../../../tests/training/train_medallion_architecture_test.py
             base_parameters:
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
