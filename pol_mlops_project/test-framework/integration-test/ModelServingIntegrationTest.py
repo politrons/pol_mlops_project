@@ -27,31 +27,22 @@ dbutils.widgets.text(
     "model_endpoint", "", label="model_endpoint"
 )
 
+dbutils.widgets.text("payload_path", "",
+                     label="payload_path")
+
 model_endpoint = dbutils.widgets.get("model_endpoint")
 
-
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.serving import DataframeSplitInput
+from importlib import import_module
 
 w = WorkspaceClient()
 
-payload = DataframeSplitInput(
-    columns=[
-        "trip_distance",
-        "pickup_zip",
-        "dropoff_zip",
-        "mean_fare_window_1h_pickup_zip",
-        "count_trips_window_1h_pickup_zip",
-        "count_trips_window_30m_dropoff_zip",
-        "dropoff_is_weekend",
-    ],
-    data=[[2.5, 7002, 7002, 8.5, 1, 1, 0]],
-)
+mod = import_module("payload." + dbutils.widgets.get("payload_path"))
 
 # Call the endpoint and get the response
 response = w.serving_endpoints.query(
     name=model_endpoint,
-    dataframe_split=payload,
+    dataframe_split=mod.payload,
 
 )
 

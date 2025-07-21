@@ -14,6 +14,7 @@ resources:
             notebook_path: ../../../test-framework/integration-test/ModelServingIntegrationTest.py
             base_parameters:
               model_endpoint: "ab_plain_endpoint"
+              payload_path: "ab_plain_model_payload"
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:
