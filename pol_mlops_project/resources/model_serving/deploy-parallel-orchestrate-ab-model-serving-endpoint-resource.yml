@@ -1,0 +1,28 @@
+common_permissions: &permissions
+  permissions:
+    - level: CAN_VIEW
+      group_name: users
+
+resources:
+  jobs:
+    deploy-custom-parallel-orchestrate_ab-model-serving-endpoint_job:
+      name: ${bundle.target}-pol_mlops_project-deploy-custom-parallel-orchestrate_ab-model-serving-endpoint
+      tasks:
+        - task_key: DeployEndpointModel
+          existing_cluster_id: ${var.inference_cluster_id}
+          notebook_task:
+            notebook_path: ../../model_serving/notebooks/DeployEndpointModel.py
+            base_parameters:
+              model_name: ${var.catalog_name}.pol_mlops_project.pol_mlops_project-custom-parallel-orchestrate_ab-model
+              model_endpoint: "ab_parallel_orchestrate_endpoint"
+              # git source information of current ML resource deployment. It will be persisted as part of the workflow run
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+      <<: *permissions
+      # If you want to turn on notifications for this job, please uncomment the below code,
+      # and provide a list of emails to the on_failure argument.
+      #
+      #  email_notifications:
+      #    on_failure:
+      #      - first@company.com
+      #      - second@company.com
+

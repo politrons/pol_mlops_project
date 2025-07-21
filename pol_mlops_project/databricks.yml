@@ -37,11 +37,13 @@ include:
   # Custom models
   - ./resources/custom_model/custom-model-cascade_ab_plain-resource.yml
   - ./resources/custom_model/custom-model-orchestrate_ab-resource.yml
+  - ./resources/custom_model/custom-model-parallel-orchestrate_ab-resource.yml
   # Model_serving
   - ./resources/model_serving/deploy-model-serving-endpoint-resource.yml
   - ./resources/model_serving/deploy-ab-model-serving-endpoint-resource.yml
   - ./resources/model_serving/deploy-ab-plain-model-serving-endpoint-resource.yml
   - ./resources/model_serving/deploy-orchestrate-ab-model-serving-endpoint-resource.yml
+  - ./resources/model_serving/deploy-parallel-orchestrate-ab-model-serving-endpoint-resource.yml
   # Testing
   - ./resources/test-framework/unit/test-medallion-architecture-resource.yaml
   - ./resources/test-framework/unit/test-training-model-medallion-resource.yaml
@@ -51,10 +53,12 @@ include:
   - ./resources/test-framework/integration/integration-test-ab-model-serving-endpoint-resource.yml
   - ./resources/test-framework/integration/integration-test-ab-plain-model-serving-endpoint-resource.yml
   - ./resources/test-framework/integration/integration-test-orchestrate-ab-model-serving-endpoint-resource.yml
+  - ./resources/test-framework/integration/integration-test-parallel-orchestrate-ab-model-serving-endpoint-resource.yml
   ## Performance test
   - ./resources/test-framework/performance/performance-test-serving-model-endpoint-resource.yml
   - ./resources/test-framework/performance/performance-test-plain-model-serving-endpoint-resource.yml
   - ./resources/test-framework/performance/performance-test-orchestration-model-serving-endpoint-resource.yml
+  - ./resources/test-framework/performance/performance-test-parallel-orchestration-model-serving-endpoint-resource.yml
   # Monitoring
   # - ./resources/monitoring/monitoring-resource.yml
 
