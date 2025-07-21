@@ -23,12 +23,9 @@ notebook_path = '/Workspace/' + os.path.dirname(
 
 dbutils.library.restartPython()
 
-dbutils.widgets.text(
-    "model_endpoint", "", label="model_endpoint"
-)
-
-dbutils.widgets.text("payload_path", "",
-                     label="payload_path")
+dbutils.widgets.text("model_endpoint", "", label="model_endpoint")
+dbutils.widgets.text("payload_path", "", label="payload_path")
+dbutils.widgets.text("assertion_path", "", label="assertion_path")
 
 model_endpoint = dbutils.widgets.get("model_endpoint")
 
@@ -37,22 +34,18 @@ from importlib import import_module
 
 w = WorkspaceClient()
 
-mod = import_module("payload." + dbutils.widgets.get("payload_path"))
+# Extract payload from [payload_path]
+payload_mod = import_module("payload." + dbutils.widgets.get("payload_path"))
 
 # Call the endpoint and get the response
 response = w.serving_endpoints.query(
     name=model_endpoint,
-    dataframe_split=mod.payload,
+    dataframe_split=payload_mod.payload,
 
 )
-
-# Extract the first prediction from the list
 print("Response: ", response)
-# prediction = float(response.predictions[0])
-# prediction
-# Assert that the prediction is within the expected range
-# assert 8.0 <= prediction <= 9.0, f"Value out of range: {prediction}"
 
-# print("✅ Prediction is within the range [8, 9]")
+# Extract assertion from [assertion_path]
 
-
+assertion_mod = import_module("assertions." + dbutils.widgets.get("assertion_path"))
+assertion_mod.assert_response(response)

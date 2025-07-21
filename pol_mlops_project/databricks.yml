@@ -50,7 +50,6 @@ include:
   # Test Framework
   ## Integration test
   - ./resources/test-framework/integration/integration-test-model-serving-endpoint-resource.yml
-  - ./resources/test-framework/integration/integration-test-ab-model-serving-endpoint-resource.yml
   - ./resources/test-framework/integration/integration-test-ab-plain-model-serving-endpoint-resource.yml
   - ./resources/test-framework/integration/integration-test-orchestrate-ab-model-serving-endpoint-resource.yml
   - ./resources/test-framework/integration/integration-test-parallel-orchestrate-ab-model-serving-endpoint-resource.yml
