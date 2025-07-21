@@ -55,6 +55,11 @@ dbutils.widgets.text(
 dbutils.widgets.text("DATABRICKS_HOST", "https://adb-3644846982999534.14.azuredatabricks.net",
                      label="Databricks Host")
 
+dbutils.widgets.text("signature_path", "",
+                     label="signature_path")
+
+
+
 DATABRICKS_HOST = dbutils.widgets.get("DATABRICKS_HOST")
 TOKEN = dbutils.secrets.get("my-scope", "databricks-token")
 
@@ -89,47 +94,16 @@ with mlflow.start_run(run_name="Custom model"):
     from mlflow.models import infer_signature
 
     # ------------------------------------------------------------------
-    # Define the input columns your wrapped model will accept
-    # ------------------------------------------------------------------
-    INPUT_COLUMNS = [
-        "trip_distance",
-        "pickup_zip",
-        "dropoff_zip",
-        "mean_fare_window_1h_pickup_zip",
-        "count_trips_window_1h_pickup_zip",
-        "count_trips_window_30m_dropoff_zip",
-        "dropoff_is_weekend",
-    ]
-
-    # ------------------------------------------------------------------
-    # Build a small pandas DataFrame that matches your serving payload
-    # (use realistic types; multiple rows help catch dtype issues)
-    # ------------------------------------------------------------------
-    sample_df = pd.DataFrame(
-        [
-            [2.5, 7002, 7002, 8.5, 1, 1, 0],
-            [1.2, 10018, 10167, 6.75, 2, 2, 0],
-        ],
-        columns=INPUT_COLUMNS,
-        dtype="float64"  # cast everything float; OR specify per-column below
-    )
-
-    # ------------------------------------------------------------------
-    # Build a *dummy* output DataFrame just to define the schema.
-    # We don't need to run the real model for signature inference.
-    # ------------------------------------------------------------------
-    sample_out_df = pd.DataFrame({
-        "pred_a": [0.0, 0.0],
-        "pred_b": [0.0, 0.0],
-    })
-
-    # ------------------------------------------------------------------
     # Log custom model using model_path
     # ------------------------------------------------------------------
-    signature = infer_signature(model_input=sample_df, model_output=sample_out_df)
+
+    from importlib import import_module
+
+    mod = import_module("signatures." + dbutils.widgets.get("signature_path"))
+    signature = mod.get_signature()
 
     model_path = '/Workspace/' + os.path.dirname(
-        dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())  + "/" + custom_model_file_name
+        dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())  + "/models/" + custom_model_file_name
 
     model_version = get_latest_model_version(model_name)
     model_uri = f"models:/{model_name}/{model_version}"

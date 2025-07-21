@@ -23,6 +23,7 @@ gevent.monkey.patch_all()
 from locust import FastHttpUser, task, constant_pacing
 from locust.env import Environment
 import gevent  # safe after patch
+import sys
 
 print("gevent patched. Locust imported cleanly.")
 
@@ -41,33 +42,25 @@ dbutils.widgets.text("tps_target", "10.0",
 dbutils.widgets.text("duration_s", "300",
                      label="duration_s Name")
 
+dbutils.widgets.text("payload_path", "ab_model_payload",
+                     label="payload_path")
+
 DATABRICKS_HOST = dbutils.widgets.get("DATABRICKS_HOST")
 ENDPOINT_NAME = dbutils.widgets.get("ENDPOINT_NAME")
+INVOKE_PATH = f"/serving-endpoints/{ENDPOINT_NAME}/invocations"
 TOKEN = dbutils.secrets.get("my-scope", "databricks-token")
 
 tps_target = float(dbutils.widgets.get("tps_target"))
 duration_s = int(dbutils.widgets.get("duration_s"))
 
-# Relative path used by Locust
-INVOKE_PATH = f"/serving-endpoints/{ENDPOINT_NAME}/invocations"
+# Payload
+
+from importlib import import_module
+
+mod = import_module("payload." + dbutils.widgets.get("payload_path"))
 
 # Sample payload (change as needed)
-PAYLOAD: Dict[str, Any] = {
-    "dataframe_split": {
-        "columns": [
-            "trip_distance",
-            "pickup_zip",
-            "dropoff_zip",
-            "mean_fare_window_1h_pickup_zip",
-            "count_trips_window_1h_pickup_zip",
-            "count_trips_window_30m_dropoff_zip",
-            "dropoff_is_weekend"
-        ],
-        "data": [
-            [2.5, 7002, 7002, 8.5, 1, 1, 0]
-        ]
-    }
-}
+
 
 print("Target:", DATABRICKS_HOST + INVOKE_PATH)
 
@@ -78,7 +71,6 @@ print("Target:", DATABRICKS_HOST + INVOKE_PATH)
 def run_locust(host: str,
                path: str,
                token: str,
-               payload: Dict[str, Any],
                tps_target: float = 1.0,
                duration_s: int = 60,
                verbose: bool = False):
@@ -97,6 +89,7 @@ def run_locust(host: str,
     }
 
     def _task_fn(self):
+        payload = mod.get_payload()
         with self.client.post(
                 path,
                 json=payload,
@@ -111,6 +104,7 @@ def run_locust(host: str,
                 js = resp.json()
                 print("response:", js)
             except Exception as e:
+                print("Error:", e)
                 resp.failure(f"JSON error: {e}")
                 return
             resp.success()
@@ -158,11 +152,11 @@ def run_locust(host: str,
 # COMMAND ----------
 # MAGIC ## Run Simulation
 
+
 summary, env = run_locust(
     host=DATABRICKS_HOST,
     path=INVOKE_PATH,
     token=TOKEN,
-    payload=PAYLOAD,
     tps_target=tps_target,
     duration_s=duration_s,
     verbose=False,

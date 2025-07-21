@@ -17,6 +17,7 @@ resources:
               ENDPOINT_NAME: "pol_endpoint"
               tps_target: "20.0"
               duration_s: "300"
+              payload_path: "ab_model_payload"
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:

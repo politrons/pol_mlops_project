@@ -5,18 +5,19 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    custom-model_cascade_ab_plain-job:
-      name: ${bundle.target}-pol_mlops_project-custom-model_cascade_ab_plain
+    performance-test-orchestration-model-serving-endpoint_job:
+      name: ${bundle.target}-pol_mlops_project-performance-test-orchestration-model-serving-endpoint
       tasks:
-        - task_key: CustomModel
+        - task_key: ModelServingPerformanceTest
           existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
-            notebook_path: ../../custom_model/notebooks/CustomModel.py
+            notebook_path: ../../../test-framework/performance-test/ModelServingPerformanceTest.py
             base_parameters:
-              experiment_name: ${var.experiment_name}
-              custom_model_file_name: "cascade_ab_plain_model.py"
-              custom_model_name: "pol_dev.pol_mlops_project.pol_mlops_project-custom-ab-plain-model"
-              signature_path: "cascade_ab_plain_signature"
+              DATABRICKS_HOST:  "https://adb-3644846982999534.14.azuredatabricks.net"
+              ENDPOINT_NAME: "ab_orchestrate_endpoint"
+              tps_target: "20.0"
+              duration_s: "300"
+              payload_path: "orchestrate_model_payload"
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:

@@ -54,6 +54,7 @@ include:
   ## Performance test
   - ./resources/test-framework/performance/performance-test-serving-model-endpoint-resource.yml
   - ./resources/test-framework/performance/performance-test-plain-model-serving-endpoint-resource.yml
+  - ./resources/test-framework/performance/performance-test-orchestration-model-serving-endpoint-resource.yml
   # Monitoring
   # - ./resources/monitoring/monitoring-resource.yml
 
