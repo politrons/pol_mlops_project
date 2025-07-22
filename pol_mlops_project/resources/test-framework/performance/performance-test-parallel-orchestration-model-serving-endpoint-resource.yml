@@ -16,7 +16,7 @@ resources:
               DATABRICKS_HOST:  "https://adb-3644846982999534.14.azuredatabricks.net"
               ENDPOINT_NAME: "ab_parallel_orchestrate_endpoint"
               tps_target: "20.0"
-              duration_s: "60"
+              duration_s: "300"
               payload_path: "orchestrate_model_payload"
               # assertions
               avg_ms: 150.0
