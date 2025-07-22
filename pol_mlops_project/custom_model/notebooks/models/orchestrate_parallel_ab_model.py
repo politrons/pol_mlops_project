@@ -1,9 +1,9 @@
+import asyncio
+
 from mlflow.pyfunc import PythonModel
 from mlflow.models import set_model
 from databricks.sdk import WorkspaceClient
-from multiprocessing import Process, Manager
-
-from numpy.core.multiarray import shares_memory
+from typing import  Optional, Any
 
 
 class CascadeABModel(PythonModel):
@@ -15,31 +15,23 @@ class CascadeABModel(PythonModel):
             token=cfg["token"]
         )
 
-    def run_process(self, idx:int, shared, records):
-        process = self.ws.serving_endpoints.query(
+    async def run_process(self, records) -> Optional[list]:
+        response = self.ws.serving_endpoints.query(
             name="pol_endpoint",
             dataframe_records=records).predictions
-        shared[idx] = process
+        return response
+
+    async def run_parallel_process(self, records) -> dict[str, Any]:
+        # Convert the incoming pandas DataFrame to list-of-dict records
+        coroutine_a = self.run_process(records)
+        coroutine_b = self.run_process(records)
+        return {"pred_a": await coroutine_a, "pred_b": await coroutine_b}
 
     # Runs on every inference request
     def predict(self, context, model_input, params=None):
         # Convert the incoming pandas DataFrame to list-of-dict records
         records = model_input.to_dict(orient="records")
-
-        with Manager() as manager:
-            shared_results = manager.dict()
-            # Parallel computing with Processor
-            process_a = Process(target=self.run_process(1, shared_results, records))
-            process_b = Process(target=self.run_process(2, shared_results, records))
-
-            process_a.start()
-            process_b.start()
-
-            process_a.join()
-            process_b.join()
-
-            # Return what the caller expects—here, a JSON-friendly dict
-            return {"pred_a": shared_results[1], "pred_b": shared_results[2]}
+        return asyncio.run(self.run_parallel_process(records))
 
 
 set_model(CascadeABModel())
