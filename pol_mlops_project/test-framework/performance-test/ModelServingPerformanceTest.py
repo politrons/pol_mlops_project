@@ -23,13 +23,13 @@ gevent.monkey.patch_all()
 from locust import FastHttpUser, task, constant_pacing
 from locust.env import Environment
 import gevent  # safe after patch
-import sys
 
 print("gevent patched. Locust imported cleanly.")
 
 from typing import Any, Dict
 from mlflow.utils.databricks_utils import dbutils
 
+# Input request
 dbutils.widgets.text("DATABRICKS_HOST", "https://adb-3644846982999534.14.azuredatabricks.net",
                      label="Databricks Host")
 
@@ -49,9 +49,19 @@ DATABRICKS_HOST = dbutils.widgets.get("DATABRICKS_HOST")
 ENDPOINT_NAME = dbutils.widgets.get("ENDPOINT_NAME")
 INVOKE_PATH = f"/serving-endpoints/{ENDPOINT_NAME}/invocations"
 TOKEN = dbutils.secrets.get("my-scope", "databricks-token")
-
 tps_target = float(dbutils.widgets.get("tps_target"))
 duration_s = int(dbutils.widgets.get("duration_s"))
+
+# Assertions
+dbutils.widgets.text("avg_ms", "avg_ms", label="avg_ms")
+dbutils.widgets.text("p50_ms", "p50_ms", label="p50_ms")
+dbutils.widgets.text("p95_ms", "p95_ms", label="p95_ms")
+dbutils.widgets.text("p99_ms", "p99_ms", label="p99_ms")
+
+avg_ms = float(dbutils.widgets.get("avg_ms"))
+p50_ms = float(dbutils.widgets.get("p50_ms"))
+p95_ms = float(dbutils.widgets.get("p95_ms"))
+p99_ms = float(dbutils.widgets.get("p99_ms"))
 
 # Payload
 
@@ -101,8 +111,7 @@ def run_locust(host: str,
                 resp.failure(f"HTTP {resp.status_code}")
                 return
             try:
-                js = resp.json()
-                print("response:", js)
+                resp.json()
             except Exception as e:
                 print("Error:", e)
                 resp.failure(f"JSON error: {e}")
@@ -152,7 +161,6 @@ def run_locust(host: str,
 # COMMAND ----------
 # MAGIC ## Run Simulation
 
-
 summary, env = run_locust(
     host=DATABRICKS_HOST,
     path=INVOKE_PATH,
@@ -161,5 +169,15 @@ summary, env = run_locust(
     duration_s=duration_s,
     verbose=False,
 )
-summary
+print(summary)
+
+# ------------
+# Assertions
+# ------------
+stats = env.stats.total
+assert stats.avg_response_time <= avg_ms
+assert stats.median_response_time <= p50_ms
+assert stats.get_response_time_percentile(0.95) <= p95_ms
+assert stats.get_response_time_percentile(0.99) <= p99_ms
+
 

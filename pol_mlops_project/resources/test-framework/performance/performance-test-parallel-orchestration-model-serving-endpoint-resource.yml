@@ -16,8 +16,13 @@ resources:
               DATABRICKS_HOST:  "https://adb-3644846982999534.14.azuredatabricks.net"
               ENDPOINT_NAME: "ab_parallel_orchestrate_endpoint"
               tps_target: "20.0"
-              duration_s: "300"
+              duration_s: "60"
               payload_path: "orchestrate_model_payload"
+              # assertions
+              avg_ms: 150.0
+              p50_ms: 150.0
+              p95_ms: 200.0
+              p99_ms: 400.0
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:
