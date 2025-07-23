@@ -22,7 +22,6 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 import os
-from mlflow.tracking import MlflowClient
 import mlflow
 
 # Notebook Environment
@@ -58,6 +57,12 @@ dbutils.widgets.text(
     "model_algorithm_path",
     "",
     label="model_algorithm_path",
+)
+
+dbutils.widgets.text(
+    "model_card_path",
+    "lgbm_regression_card.md",
+    label="model_card_path",
 )
 
 # COMMAND ----------
@@ -146,6 +151,22 @@ with mlflow.start_run(run_name=f"train_plain_7fe_{env}") as run:
 
     # Log model
     model_class.log_model(model, model_name, signature, input_example)
+
+# COMMAND ----------
+# DBTITLE 1,register model card
+from pathlib import Path
+from mlflow import MlflowClient
+
+client = MlflowClient()
+
+notebook_path = '/Workspace/' + os.path.dirname(
+    dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())
+description = (Path(notebook_path) / "cards" / dbutils.widgets.get("model_card_path")).read_text()
+
+client.update_registered_model(
+    name=model_name,
+    description=description
+)
 
 # COMMAND ----------
 # DBTITLE 1,Retrieve model URI & return to job flow
