@@ -7,6 +7,7 @@
 # COMMAND ----------
 import os
 
+from mlflow import spark
 from mlflow.utils.databricks_utils import dbutils
 
 notebook_path = '/Workspace/' + os.path.dirname(
@@ -92,8 +93,9 @@ X_train, X_test, y_train, y_test = train_test_split(X_pdf, y_pdf, random_state=1
 # Load model
 model_algorithm_path = dbutils.widgets.get("model_algorithm_path")
 print(f"Loading algorithm model {model_algorithm_path}")
-model_algorithms_mod = import_module("model_algorithms." + model_algorithm_path)
-model = model_algorithms_mod.get_model_algorithm()
+model_algorithms_mod = import_module(f"model_algorithms.{model_algorithm_path}")
+model_class = model_algorithms_mod.model_contract
+model = model_class.get_model_algorithm()
 
 # Train model
 model.fit(X_train, y_train)
@@ -141,7 +143,7 @@ with mlflow.start_run(run_name=f"train_plain_7fe_{env}") as run:
     mlflow.log_metric("rmse", rmse)
 
     # Log model
-    model_algorithms_mod.log_model(model, model_name, signature, input_example)
+    model_class.log_model(model, model_name, signature, input_example)
 
 # COMMAND ----------
 # DBTITLE 1,Retrieve model URI & return to job flow
