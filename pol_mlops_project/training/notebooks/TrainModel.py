@@ -169,7 +169,7 @@ client.update_registered_model(
 )
 
 # COMMAND ----------
-# DBTITLE 1,Retrieve model URI & return to job flow
+# DBTITLE 1,load task values for any next job
 model_version = get_latest_model_version(model_name)
 model_uri = f"models:/{model_name}/{model_version}"
 print(f"Registered model version: {model_version}")
