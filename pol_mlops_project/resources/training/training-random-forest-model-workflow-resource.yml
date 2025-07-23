@@ -7,8 +7,8 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    training_plain-model_job:
-      name: ${bundle.target}-pol_mlops_project-training-plain-model-job
+    random-forest-model_job:
+      name: ${bundle.target}-pol_mlops_project-training-random-forest-model-job
       tasks:
         - task_key: Train
           existing_cluster_id: 0714-155748-yb66nzly
@@ -19,8 +19,8 @@ resources:
               # TODO: Update training_data_path
               training_data_path: /databricks-datasets/nyctaxi-with-zipcodes/subsampled
               experiment_name: ${var.experiment_name}
-              model_algorithm_path: "lgbm_regression"
-              model_name: pol_dev.pol_mlops_project.pol_mlops_project-plain-model
+              model_name: pol_dev.pol_mlops_project.pol_mlops_project-random-forest-model
+              model_algorithm_path: "random_forest"
               pickup_features_table: ${var.catalog_name}.pol_mlops_project.fe_trip_pickup_features
               dropoff_features_table: ${var.catalog_name}.pol_mlops_project.fe_trip_dropoff_features
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run

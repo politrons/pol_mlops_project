@@ -34,6 +34,9 @@ include:
   - ./resources/training/training-model-optune-workflow-resource.yml
   - ./resources/training/training-model-medallion-workflow-resource.yml
   - ./resources/training/training-plain-model-workflow-resource.yml
+  - ./resources/training/training-elastic-net-linear-model-workflow-resource.yml
+  - ./resources/training/training-random-forest-model-workflow-resource.yml
+  - ./resources/training/training-neighbord_regression-model-workflow-resource.yml
   # Custom models
   - ./resources/custom_model/custom-model-cascade_ab_plain-resource.yml
   - ./resources/custom_model/custom-model-orchestrate_ab-resource.yml

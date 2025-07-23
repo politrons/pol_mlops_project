@@ -31,7 +31,7 @@ env = dbutils.widgets.get("env")
 # Path to the Hive-registered Delta table containing the training data.
 dbutils.widgets.text(
     "training_data_path",
-    "/databricks-datasets/nyctaxi-with-zipcodes/subsampled",
+    "",
     label="Path to the training data",
 )
 
@@ -44,19 +44,7 @@ dbutils.widgets.text(
 
 # Unity Catalog registered model name to use for the trained model.
 dbutils.widgets.text(
-    "model_name", "pol_dev.pol_mlops_project.pol_mlops_project-plain-model", label="Full (Three-Level) Model Name"
-)
-
-dbutils.widgets.text(
-    "pickup_features_table",
-    "pol_dev.pol_mlops_project.fe_trip_pickup_features",
-    label="Pickup Features Table (unused)",
-)
-
-dbutils.widgets.text(
-    "dropoff_features_table",
-    "pol_dev.pol_mlops_project.fe_trip_dropoff_features",
-    label="Dropoff Features Table (unused)",
+    "model_name", "", label="Full (Three-Level) Model Name"
 )
 
 dbutils.widgets.text(
@@ -65,6 +53,11 @@ dbutils.widgets.text(
     label="data_path",
 )
 
+dbutils.widgets.text(
+    "model_algorithm_path",
+    "",
+    label="model_algorithm_path",
+)
 
 # COMMAND ----------
 # DBTITLE 1,Capture widget values
@@ -85,28 +78,29 @@ raw_data.display()
 
 # COMMAND ----------
 # DBTITLE 1,Train LightGBM
-import lightgbm as lgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 import numpy as np
 
 from importlib import import_module
 
+# Load training data
 training_data_mod = import_module("data." + dbutils.widgets.get("data_path"))
 X_pdf, y_pdf = training_data_mod.get_training_data(raw_data)
 X_train, X_test, y_train, y_test = train_test_split(X_pdf, y_pdf, random_state=123)
 
-model = lgb.LGBMRegressor(
-    num_leaves=32,
-    objective="regression",
-    n_estimators=100,
-)
+# Load model
+model_algorithm_path = dbutils.widgets.get("model_algorithm_path")
+print(f"Loading algorithm model {model_algorithm_path}")
+model_algorithms_mod = import_module("model_algorithms." + model_algorithm_path)
+model = model_algorithms_mod.get_model_algorithm()
 
+# Train model
 model.fit(X_train, y_train)
 
 preds = model.predict(X_test)
 rmse = float(np.sqrt(mean_squared_error(y_test, preds)))
-print(f"Test RMSE: {rmse:.4f}")
+mlflow.log_metric("rmse", rmse)
 
 # COMMAND ----------
 # DBTITLE 1,Infer signature & input_example
@@ -125,8 +119,7 @@ print("Signature inferred:")
 print(signature)
 
 # COMMAND ----------
-# DBTITLE 1,Log model (MLflow LightGBM flavor + Registry)
-import json
+# DBTITLE 1,Log model (MLflow flavor + Registry)
 
 def get_latest_model_version(model_name: str) -> int:
     latest_version = 1
@@ -137,7 +130,6 @@ def get_latest_model_version(model_name: str) -> int:
             latest_version = version_int
     return latest_version
 
-# Fin de run previo si existiera
 mlflow.end_run()
 
 with mlflow.start_run(run_name=f"train_plain_7fe_{env}") as run:
@@ -148,16 +140,8 @@ with mlflow.start_run(run_name=f"train_plain_7fe_{env}") as run:
     mlflow.log_param("feature_engineering_inline", True)
     mlflow.log_metric("rmse", rmse)
 
-    # mlflow.log_dict({"features": feature_cols, "label": LABEL_COL}, "training_columns.json")
-
     # Log model
-    mlflow.lightgbm.log_model(
-        model,
-        artifact_path="model",
-        registered_model_name=model_name,
-        signature=signature,
-        input_example=input_example,
-    )
+    model_algorithms_mod.log_model(model, model_name, signature, input_example)
 
 # COMMAND ----------
 # DBTITLE 1,Retrieve model URI & return to job flow
