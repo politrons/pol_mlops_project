@@ -6,6 +6,35 @@ testing ML code changes on Databricks or your local machine.
 
 The "Getting Started" docs can be found at https://docs.databricks.com/dev-tools/bundles/mlops-stacks.html.
 
+## How to customise `databricks.yaml` before deploying the bundle
+
+You only need three edits plus one shared inference cluster. Follow the steps in order.
+
+| What to change          | Where                                                      | Example / notes                                                                                                                         |
+|-------------------------|------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| host                    | `targets.<environment>.workspace.host`                     | Replace `https://adb-3644846982999534.14.azuredatabricks.net` with the full URL of your own workspace (the one you see in the browser). |
+| catalog_name            | `targets.<environment>.variables.catalog_name`             | If you don’t want to reuse `pol_dev`, `pol_staging`, `pol_prod` or `pol_test`, enter the name of your Unity Catalog here.               |
+| inference_cluster_id    | `targets.<environment>.variables.inference_cluster_id`     | Create the cluster first (see below), copy its ID, and paste it here.                                                                   |
+
+---
+
+### Creating the shared inference cluster
+
+1. In the Databricks UI, go to **Clusters → Create Cluster** (Advanced) and choose **Shared cluster**.  
+2. Give it any name you like, for example `pol-inference-shared`.  
+3. Set **Databricks Runtime** to `13.3 LTS (includes Apache Spark 3.4.1, Scala 2.12)` and tick the **Machine Learning** checkbox.  
+4. Choose **Node type** `Standard_DS3_v2` (you can select a bigger node if your workload requires it; this is the minimum tested).  
+5. Under **Libraries → PIP**, add exactly:  
+   
+       typing_extensions==4.14.1
+       databricks-feature-engineering==0.12.1
+   
+6. Save the cluster, wait until it’s running, then copy its **Cluster ID** (found on the Overview tab).  
+7. Paste that ID into `inference_cluster_id` for the relevant target in your `databricks.yaml`.
+
+With those three substitutions and the shared cluster in place, `databricks bundle deploy` should run smoothly.
+
+
 ## Table of contents
 * [Code structure](#code-structure): structure of this project.
 
