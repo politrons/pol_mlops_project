@@ -90,11 +90,13 @@ training_data_mod = import_module("data." + dbutils.widgets.get("data_path"))
 X_pdf, y_pdf = training_data_mod.get_training_data(raw_data)
 X_train, X_test, y_train, y_test = train_test_split(X_pdf, y_pdf, random_state=123)
 
-# Load model
+# Load model class
 model_algorithm_path = dbutils.widgets.get("model_algorithm_path")
 print(f"Loading algorithm model {model_algorithm_path}")
 model_algorithms_mod = import_module(f"model_algorithms.{model_algorithm_path}")
 model_class = model_algorithms_mod.model_contract
+
+# Load model algorithm
 model = model_class.get_model_algorithm()
 
 # Train model
