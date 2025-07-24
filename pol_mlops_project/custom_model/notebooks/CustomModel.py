@@ -29,36 +29,28 @@ dbutils.library.restartPython()
 
 # Unity Catalog registered model name to use for the trained mode.
 dbutils.widgets.text(
-    "model_name", "pol_dev.pol_mlops_project.pol_mlops_project-plain-model", label="Full (Three-Level) Model Name"
+    "model_name", "", label="Full (Three-Level) Model Name"
 )
 
 model_name = dbutils.widgets.get("model_name")
 
 dbutils.widgets.text(
-    "custom_model_file_name", "cascade_ab_plain_model.py", label="custom_model_file_name"
+    "custom_model_file_name", "", label="custom_model_file_name"
 )
 
 custom_model_file_name = dbutils.widgets.get("custom_model_file_name")
 
 dbutils.widgets.text(
-    "custom_model_name", "pol_dev.pol_mlops_project.pol_mlops_project-custom-ab-plain-model", label="custom_model_name"
+    "custom_model_name", "", label="custom_model_name"
 )
 
 custom_model_name = dbutils.widgets.get("custom_model_name")
 
-dbutils.widgets.text(
-    "experiment_name",
-    f"/pol_dev-pol_mlops_project-experiment",
-    label="MLflow experiment name",
-)
+dbutils.widgets.text( "experiment_name","", label="MLflow experiment name")
 
-dbutils.widgets.text("DATABRICKS_HOST", "https://adb-3644846982999534.14.azuredatabricks.net",
-                     label="Databricks Host")
+dbutils.widgets.text("DATABRICKS_HOST", "", label="Databricks Host")
 
-dbutils.widgets.text("signature_path", "",
-                     label="signature_path")
-
-
+dbutils.widgets.text("signature_path", "", label="signature_path")
 
 DATABRICKS_HOST = dbutils.widgets.get("DATABRICKS_HOST")
 TOKEN = dbutils.secrets.get("my-scope", "databricks-token")

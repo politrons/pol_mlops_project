@@ -9,7 +9,7 @@ resources:
       name: ${bundle.target}-pol_mlops_project-write-feature-table-job
       tasks:
         - task_key: PickupFeatures
-          existing_cluster_id: 0714-155748-yb66nzly
+          existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
             notebook_path: ../../feature_engineering/notebooks/GenerateAndWriteFeatures.py
             base_parameters:
@@ -25,7 +25,7 @@ resources:
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: DropoffFeatures
-          existing_cluster_id: 0714-155748-yb66nzly
+          existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
             notebook_path: ../../feature_engineering/notebooks/GenerateAndWriteFeatures.py
             base_parameters:
@@ -35,7 +35,7 @@ resources:
               input_start_date: ""
               input_end_date: ""
               timestamp_column: tpep_dropoff_datetime
-              output_table_name: ${var.catalog_name}.pol_mlops_project.fe_trip_dropoff_features
+              output_table_name: ${var.catalog_name}.${bundle.name}.fe_trip_dropoff_features
               features_transform_module: dropoff_features
               primary_keys: zip
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run

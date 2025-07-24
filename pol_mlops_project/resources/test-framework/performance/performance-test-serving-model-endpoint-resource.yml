@@ -13,7 +13,7 @@ resources:
           notebook_task:
             notebook_path: ../../../test-framework/performance-test/ModelServingPerformanceTest.py
             base_parameters:
-              DATABRICKS_HOST:  "https://adb-3644846982999534.14.azuredatabricks.net"
+              DATABRICKS_HOST: ${workspace.hosts}
               ENDPOINT_NAME: "pol_endpoint"
               tps_target: "20.0"
               duration_s: "300"

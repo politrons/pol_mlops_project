@@ -13,10 +13,12 @@ resources:
           notebook_task:
             notebook_path: ../../custom_model/notebooks/CustomModel.py
             base_parameters:
+              model_name: "${var.catalog_name}.${bundle.name}.pol_mlops_project-plain-model"
               experiment_name: ${var.experiment_name}
               custom_model_file_name: "cascade_ab_plain_model.py"
-              custom_model_name: "pol_dev.pol_mlops_project.pol_mlops_project-custom-ab-plain-model"
+              custom_model_name: "${var.catalog_name}.${bundle.name}.pol_mlops_project-custom-ab-plain-model"
               signature_path: "cascade_ab_plain_signature"
+              DATABRICKS_HOST: ${workspace.hosts}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:

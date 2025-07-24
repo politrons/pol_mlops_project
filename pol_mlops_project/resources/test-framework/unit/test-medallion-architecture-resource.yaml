@@ -9,7 +9,7 @@ resources:
       name: ${bundle.target}-pol_mlops_project-test-medallion-architecture
       tasks:
         - task_key: TestMedallionArchitectureFeatures
-          existing_cluster_id: 0714-155748-yb66nzly
+          existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
             notebook_path: ../../../tests/pipelines/notebooks/medallion_architecture_test.py
             base_parameters:

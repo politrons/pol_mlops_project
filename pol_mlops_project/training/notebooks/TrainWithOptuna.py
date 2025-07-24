@@ -1,13 +1,4 @@
 # Databricks notebook source
-##################################################################################
-# Training Notebook (consumes pre-built Medallion tables)
-#
-# Reads:
-#   pol_dev.pol_mlops_project.gold_nyc_taxi
-# Trains:
-#   LightGBM regression
-# Logs / registers model in Unity Catalog
-##################################################################################
 # COMMAND ----------
 
 # MAGIC %load_ext autoreload

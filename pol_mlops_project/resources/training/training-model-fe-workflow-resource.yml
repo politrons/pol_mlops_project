@@ -11,7 +11,7 @@ resources:
       name: ${bundle.target}-pol_mlops_project-model-training-fe-job
       tasks:
         - task_key: Train
-          existing_cluster_id: 0714-155748-yb66nzly
+          existing_cluster_id: ${var.inference_cluster_id}
           notebook_task:
             notebook_path: ../../training/notebooks/TrainWithFeatureStore.py
             base_parameters:
@@ -25,7 +25,7 @@ resources:
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: ModelValidation
-          existing_cluster_id: 0714-155748-yb66nzly
+          existing_cluster_id: ${var.inference_cluster_id}
           depends_on:
             - task_key: Train
           notebook_task:
@@ -68,7 +68,7 @@ resources:
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: ModelDeployment
-          existing_cluster_id: 0714-155748-yb66nzly
+          existing_cluster_id: ${var.inference_cluster_id}
           depends_on:
             - task_key: ModelValidation
           notebook_task:

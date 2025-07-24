@@ -3,7 +3,7 @@ resources:
   pipelines:
     nyc_taxi_medallion:
       name: nyc_taxi_medallion
-      catalog: pol_dev
+      catalog: ${var.catalog_name}
       target: pol_mlops_project
       continuous: false
       edition: ADVANCED

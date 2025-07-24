@@ -30,7 +30,7 @@ from typing import Any, Dict
 from mlflow.utils.databricks_utils import dbutils
 
 # Input request
-dbutils.widgets.text("DATABRICKS_HOST", "https://adb-3644846982999534.14.azuredatabricks.net",
+dbutils.widgets.text("DATABRICKS_HOST", "",
                      label="Databricks Host")
 
 dbutils.widgets.text("ENDPOINT_NAME", "",

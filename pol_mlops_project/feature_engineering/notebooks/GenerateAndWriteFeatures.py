@@ -28,8 +28,7 @@
 #
 # A Hive-registered Delta table containing the input data.
 dbutils.widgets.text(
-    "input_table_path",
-    "/databricks-datasets/nyctaxi-with-zipcodes/subsampled",
+    "input_table_path","",
     label="Input Table Name",
 )
 # Input start date.
@@ -39,19 +38,15 @@ dbutils.widgets.text("input_end_date", "", label="Input End Date")
 # Timestamp column. Will be used to filter input start/end dates.
 # This column is also used as a timestamp key of the feature table.
 dbutils.widgets.text(
-    "timestamp_column", "tpep_pickup_datetime", label="Timestamp column"
+    "timestamp_column", "", label="Timestamp column"
 )
 
 # Feature table to store the computed features.
-dbutils.widgets.text(
-    "output_table_name",
-    "pol_dev.pol_mlops_project.trip_pickup_features",
-    label="Output Feature Table Name",
-)
+dbutils.widgets.text("output_table_name","", label="Output Feature Table Name")
 
 # Feature transform module name.
 dbutils.widgets.text(
-    "features_transform_module", "pickup_features", label="Features transform file."
+    "features_transform_module", "", label="Features transform file."
 )
 # Primary Keys columns for the feature table;
 dbutils.widgets.text(

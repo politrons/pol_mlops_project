@@ -55,7 +55,7 @@ dbutils.widgets.text(
 # MLflow experiment name.
 dbutils.widgets.text(
     "experiment_name",
-    f"/pol_dev-pol_mlops_project-experiment",
+    "",
     label="MLflow experiment name",
 )
 
