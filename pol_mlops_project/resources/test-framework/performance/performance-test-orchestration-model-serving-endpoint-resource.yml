@@ -13,7 +13,7 @@ resources:
           notebook_task:
             notebook_path: ../../../test-framework/performance-test/ModelServingPerformanceTest.py
             base_parameters:
-              DATABRICKS_HOST: ${workspace.hosts}
+              DATABRICKS_HOST: ${workspace.host}
               ENDPOINT_NAME: "ab_orchestrate_endpoint"
               tps_target: "20.0"
               duration_s: "300"

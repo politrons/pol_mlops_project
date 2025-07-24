@@ -18,7 +18,7 @@ resources:
               custom_model_file_name: "orchestrate_parallel_ab_model.py"
               custom_model_name: "${var.catalog_name}.${bundle.name}.pol_mlops_project-custom-parallel-orchestrate_ab-model"
               signature_path: "orchestrate_parallel_ab_signature"
-              DATABRICKS_HOST: ${workspace.hosts}
+              DATABRICKS_HOST: ${workspace.host}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:
