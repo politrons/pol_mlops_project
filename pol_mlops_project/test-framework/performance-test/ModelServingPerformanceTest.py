@@ -63,11 +63,14 @@ p50_ms = float(dbutils.widgets.get("p50_ms"))
 p95_ms = float(dbutils.widgets.get("p95_ms"))
 p99_ms = float(dbutils.widgets.get("p99_ms"))
 
-# Payload
+# Load Payload
 
 from importlib import import_module
 
-mod = import_module("payload." + dbutils.widgets.get("payload_path"))
+payload_path = dbutils.widgets.get("payload_path")
+print(f"Loading payload {payload_path}")
+payload_mod = import_module(f"payload.{payload_path}")
+payload_class = payload_mod.payload_contract
 
 # Sample payload (change as needed)
 
@@ -99,25 +102,28 @@ def run_locust(host: str,
     }
 
     def _task_fn(self):
-        payload = mod.get_payload()
-        with self.client.post(
-                path,
-                json=payload,
-                headers=headers,
-                name="invoke_model",
-                catch_response=True,
-        ) as resp:
-            if resp.status_code != 200:
-                resp.failure(f"HTTP {resp.status_code}")
-                return
-            try:
-                resp.json()
-            except Exception as e:
+        payload = payload_class.get_payload()
+        try:
+            with self.client.post(
+                    path,
+                    json=payload,
+                    headers=headers,
+                    name="invoke_model",
+                    catch_response=True,
+            ) as resp:
+                if resp.status_code != 200:
+                    resp.failure(f"HTTP {resp.status_code}")
+                    return
+                try:
+                    resp.json()
+                except Exception as e:
+                    print("Request error:", e)
+                    resp.failure(f"JSON error: {e}")
+                    return
+                resp.success()
+        except Exception as e:
                 print("Error:", e)
-                resp.failure(f"JSON error: {e}")
                 return
-            resp.success()
-
     # Dynamic user class so we can re-run in notebook
     ModelUser = type(
         "NotebookModelUser",

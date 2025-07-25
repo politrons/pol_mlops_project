@@ -48,6 +48,7 @@ include:
   - ./resources/model_serving/deploy-orchestrate-ab-model-serving-endpoint-resource.yml
   - ./resources/model_serving/deploy-parallel-orchestrate-ab-model-serving-endpoint-resource.yml
   - ./resources/model_serving/deploy-ab_deploy_endpoint.yml
+  - ./resources/model_serving/promote-challenger-to-champion-endpoints-resource.yml
   # Testing
   - ./resources/test-framework/unit/test-medallion-architecture-resource.yaml
   - ./resources/test-framework/unit/test-training-model-medallion-resource.yaml
