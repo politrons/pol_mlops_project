@@ -47,6 +47,7 @@ include:
   - ./resources/model_serving/deploy-ab-plain-model-serving-endpoint-resource.yml
   - ./resources/model_serving/deploy-orchestrate-ab-model-serving-endpoint-resource.yml
   - ./resources/model_serving/deploy-parallel-orchestrate-ab-model-serving-endpoint-resource.yml
+  - ./resources/model_serving/deploy-ab_deploy_endpoint.yml
   # Testing
   - ./resources/test-framework/unit/test-medallion-architecture-resource.yaml
   - ./resources/test-framework/unit/test-training-model-medallion-resource.yaml
@@ -61,6 +62,7 @@ include:
   - ./resources/test-framework/performance/performance-test-plain-model-serving-endpoint-resource.yml
   - ./resources/test-framework/performance/performance-test-orchestration-model-serving-endpoint-resource.yml
   - ./resources/test-framework/performance/performance-test-parallel-orchestration-model-serving-endpoint-resource.yml
+  - ./resources/test-framework/performance/performance-test-ab-model-serving-endpoint-resource.yml
   # Monitoring
   # - ./resources/monitoring/monitoring-resource.yml
 
